@@ -3,22 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>petMVP</title>
+    <meta name="theme-color" content="#ffffff">
+    <title>petMVP — персональная программа от специалиста</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232563eb'/%3E%3C/svg%3E">
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
-<body class="page">
+<body>
 
 <main class="container landing">
-    <h1>petMVP</h1>
-    <p class="lead">
-        Расскажите о себе, приложите фото — специалист подберёт программу
-        и будет следить за прогрессом.
-    </p>
+    <section class="hero">
+        <span class="pill">Ранний доступ</span>
 
-    <div class="stack">
-        <a class="btn btn-primary" th:href="@{/register}">Начать</a>
-        <a class="btn" th:href="@{/login}">У меня уже есть аккаунт</a>
-    </div>
+        <h1>Программа, которую<br>составляет человек,<br>а не автогенератор</h1>
+
+        <p class="lead">
+            Расскажите о себе и приложите фото. Специалист посмотрит данные и соберёт
+            план, который подходит вашему телу, состоянию и графику.
+        </p>
+
+        <div class="actions">
+            <a class="btn btn-primary btn-block" th:href="@{/register}">Начать</a>
+            <a class="btn btn-block" th:href="@{/login}">У меня уже есть аккаунт</a>
+        </div>
+
+        <ul class="features">
+            <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                <span>Анкета на 5 минут — без сложных терминов</span>
+            </li>
+            <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                <span>Программа из понятных упражнений с видео</span>
+            </li>
+            <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                <span>Отмечайте выполнение и получайте правки</span>
+            </li>
+        </ul>
+    </section>
+
+    <footer class="footer">petMVP · ранний доступ</footer>
 </main>
 
 </body>

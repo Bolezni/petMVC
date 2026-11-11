@@ -3,52 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
     <title>Регистрация — petMVP</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232563eb'/%3E%3C/svg%3E">
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
-<body class="page">
+<body>
 
 <div th:replace="~{fragments :: topbar}"></div>
 
 <main class="container">
     <h1>Регистрация</h1>
+    <p class="muted">Три поля — и можно заполнять анкету.</p>
 
     <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
 
     <form method="post" th:action="@{/register}" class="card form">
         <label class="field">
-            <span>Email</span>
-            <input type="email" name="email" required autocomplete="email">
+            <span class="field-label">Email</span>
+            <input type="email" name="email" required autocomplete="email" placeholder="you@example.com">
         </label>
 
         <label class="field">
-            <span>Пароль</span>
-            <input type="password" name="password" required minlength="6" autocomplete="new-password">
+            <span class="field-label">Телефон</span>
+            <input type="tel" name="phone" required placeholder="+79991234567" pattern="\+7\d{10}">
+            <span class="hint">Нужен специалисту, чтобы связаться, если что-то непонятно.</span>
         </label>
 
         <label class="field">
-            <span>Пароль ещё раз</span>
+            <span class="field-label">Пароль</span>
+            <input type="password" name="password" required minlength="6" autocomplete="new-password" placeholder="Минимум 6 символов">
+        </label>
+
+        <label class="field">
+            <span class="field-label">Пароль ещё раз</span>
             <input type="password" name="passwordRepeat" required minlength="6" autocomplete="new-password">
         </label>
 
         <label class="field">
-            <span>Телефон</span>
-            <input type="tel" name="phone" required placeholder="+79991234567" pattern="\+7\d{10}">
+            <span class="field-label">Как вас зовут</span>
+            <input type="text" name="name" maxlength="100" placeholder="Необязательно" autocomplete="given-name">
         </label>
 
         <label class="field">
-            <span>Как вас зовут</span>
-            <input type="text" name="name" maxlength="100">
-        </label>
-
-        <label class="field">
-            <span>Пол</span>
+            <span class="field-label">Пол</span>
             <select name="gender" required>
-                <option th:each="g : ${genders}" th:value="${g}" th:text="${g.name() == 'MAN' ? 'Мужской' : 'Женский'}"></option>
+                <option th:each="g : ${genders}" th:value="${g}"
+                        th:text="${g.name() == 'MAN' ? 'Мужской' : 'Женский'}"></option>
             </select>
         </label>
 
-        <button class="btn btn-primary" type="submit">Создать аккаунт</button>
+        <button class="btn btn-primary btn-block" type="submit">Создать аккаунт</button>
     </form>
 
     <p class="muted">

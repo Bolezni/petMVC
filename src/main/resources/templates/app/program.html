@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
     <title th:text="${program.title} + ' — petMVP'">Программа</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232563eb'/%3E%3C/svg%3E">
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
-<body class="page">
+<body>
 
 <div th:replace="~{fragments :: topbar}"></div>
 
@@ -15,51 +17,69 @@
 
     <h1 th:text="${program.title}">Программа</h1>
 
+    <ul class="chips">
+        <li class="chip-strong" th:text="'Упражнений: ' + ${#lists.size(program.items)}"></li>
+        <li th:if="${program.status.name() == 'ACTIVE'}">Активна</li>
+        <li th:if="${program.status.name() == 'COMPLETED'}">Завершена</li>
+    </ul>
+
     <div class="alert alert-ok" th:if="${param.done}">
-        Отмечено. Спасибо за отметку!
+        Отметили выполнение — спасибо!
     </div>
 
-    <section class="card" th:if="${program.specialistComment != null and !program.specialistComment.isBlank()}">
-        <h2>Комментарий специалиста</h2>
+    <section class="card"
+             th:if="${program.specialistComment != null and !program.specialistComment.isBlank()}">
+        <h2>От специалиста</h2>
         <p th:text="${program.specialistComment}"></p>
     </section>
 
     <section class="card" th:if="${program.priorities != null and !#lists.isEmpty(program.priorities)}">
-        <h2>Приоритеты</h2>
-        <ul class="list">
+        <h2>На что обратить внимание</h2>
+        <ul class="chips">
             <li th:each="p : ${program.priorities}" th:text="${p}"></li>
         </ul>
     </section>
 
-    <h2>Упражнения</h2>
+    <h2 class="section-title">Упражнения</h2>
 
     <article class="card exercise" th:each="item, i : ${program.items}">
-        <h3>
-            <span th:text="${i.count} + '. '"></span>
-            <span th:text="${item.exerciseName}"></span>
-        </h3>
+        <div class="exercise-head">
+            <span class="exercise-index" th:text="${i.count}">1</span>
+            <div class="exercise-body">
+                <h3 th:text="${item.exerciseName}">Упражнение</h3>
+                <p class="muted" th:if="${item.description != null and !item.description.isBlank()}"
+                   th:text="${item.description}"></p>
+            </div>
+        </div>
 
-        <p class="muted" th:if="${item.description != null}" th:text="${item.description}"></p>
+        <ul class="chips">
+            <li th:if="${item.sets != null}" th:text="'Подходы: ' + ${item.sets}"></li>
+            <li th:if="${item.reps != null}" th:text="'Повторения: ' + ${item.reps}"></li>
+            <li th:if="${item.muscleGroup != null and !item.muscleGroup.isBlank()}"
+                th:text="${item.muscleGroup}"></li>
+        </ul>
 
-        <p class="meta">
-            <span th:if="${item.sets != null}" th:text="'Подходы: ' + ${item.sets}"></span>
-            <span th:if="${item.reps != null}" th:text="'Повторения: ' + ${item.reps}"></span>
-            <span th:if="${item.muscleGroup != null}" th:text="${item.muscleGroup}"></span>
-        </p>
+        <p class="note" th:if="${item.note != null and !item.note.isBlank()}" th:text="${item.note}"></p>
 
-        <p th:if="${item.note != null and !item.note.isBlank()}" class="note" th:text="${item.note}"></p>
+        <div class="exercise-actions" th:if="${item.videoUrl != null and !item.videoUrl.isBlank()}">
+            <a class="btn btn-sm" th:href="${item.videoUrl}" target="_blank" rel="noopener">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="9 6 19 12 9 18 9 6"/></svg>
+                Смотреть видео
+            </a>
+        </div>
 
-        <a class="btn" th:if="${item.videoUrl != null and !item.videoUrl.isBlank()}"
-           th:href="${item.videoUrl}" target="_blank" rel="noopener">Смотреть видео</a>
-
-        <form method="post" class="form complete"
-              th:action="@{/app/programs/{id}/items/{itemId}/completion(id=${program.id}, itemId=${item.id})}">
-            <label class="field">
-                <span>Как прошло? (необязательно)</span>
-                <textarea name="feedback" rows="2" placeholder="Легко / тяжело / болит"></textarea>
-            </label>
-            <button class="btn btn-primary" type="submit">Выполнено</button>
-        </form>
+        <details class="acc">
+            <summary>Отметить выполнение</summary>
+            <form method="post" class="form"
+                  th:action="@{/app/programs/{id}/items/{itemId}/completion(id=${program.id}, itemId=${item.id})}">
+                <label class="field">
+                    <span class="field-label">Как прошло?</span>
+                    <textarea name="feedback" rows="2" placeholder="Легко / тяжело / болит"></textarea>
+                    <span class="hint">Необязательно. Специалист это увидит.</span>
+                </label>
+                <button class="btn btn-primary btn-sm" type="submit">Выполнено</button>
+            </form>
+        </details>
     </article>
 </main>
 

@@ -3,44 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
     <title>Анкета — petMVP</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232563eb'/%3E%3C/svg%3E">
     <link rel="stylesheet" th:href="@{/css/app.css}">
 </head>
-<body class="page">
+<body>
 
 <div th:replace="~{fragments :: topbar}"></div>
 
 <main class="container">
+    <a class="back" th:href="@{/app}">← В кабинет</a>
+
     <h1>Анкета</h1>
     <p class="muted">Займёт пару минут. Чем точнее ответы, тем полезнее программа.</p>
 
-    <form method="post" th:action="@{/app/questionnaire}" class="card form">
+    <form method="post" th:action="@{/app/questionnaire}" class="form">
 
-        <label class="field">
-            <span>С чем вы пришли? Что беспокоит?</span>
-            <textarea name="request" rows="4" required
-                      placeholder="Например: сижу за компьютером, болит поясница, хочу вернуть форму"></textarea>
-        </label>
+        <fieldset class="card">
+            <legend>О вас</legend>
 
-        <label class="field">
-            <span>Цели — по одной на строку</span>
-            <textarea name="goals" rows="3" required
-                      placeholder="Убрать боль в пояснице&#10;Подтянуть спину&#10;Заниматься 3 раза в неделю"></textarea>
-        </label>
+            <label class="field">
+                <span class="field-label">С чем вы пришли?</span>
+                <textarea name="request" rows="4" required
+                          placeholder="Например: сижу за компьютером, болит поясница, хочу вернуть форму"></textarea>
+                <span class="hint">Своими словами — так специалисту понятнее.</span>
+            </label>
+        </fieldset>
 
-        <label class="field">
-            <span>Самочувствие сейчас</span>
-            <textarea name="wellbeing" rows="2"
-                      placeholder="Например: устаю к вечеру, болит шея"></textarea>
-        </label>
+        <fieldset class="card">
+            <legend>Цели</legend>
 
-        <label class="field">
-            <span>Ограничения и травмы — по одной на строку</span>
-            <textarea name="restrictions" rows="3"
-                      placeholder="Нельзя нагружать колено&#10;Была травма плеча"></textarea>
-        </label>
+            <label class="field">
+                <span class="field-label">Что хотите получить?</span>
+                <textarea name="goals" rows="3" required
+                          placeholder="Убрать боль в пояснице&#10;Подтянуть спину&#10;Заниматься 3 раза в неделю"></textarea>
+                <span class="hint">Каждая цель — с новой строки. Минимум одна.</span>
+            </label>
+        </fieldset>
 
-        <button class="btn btn-primary" type="submit">Отправить анкету</button>
+        <fieldset class="card">
+            <legend>Самочувствие и ограничения</legend>
+
+            <label class="field">
+                <span class="field-label">Как вы себя чувствуете сейчас?</span>
+                <textarea name="wellbeing" rows="2"
+                          placeholder="Например: устаю к вечеру, болит шея"></textarea>
+                <span class="hint">Необязательно, но помогает подобрать нагрузку.</span>
+            </label>
+
+            <label class="field">
+                <span class="field-label">Травмы и противопоказания</span>
+                <textarea name="restrictions" rows="3"
+                          placeholder="Нельзя нагружать колено&#10;Была травма плеча"></textarea>
+                <span class="hint">Каждое ограничение — с новой строки. Если их нет, оставьте пустым.</span>
+            </label>
+        </fieldset>
+
+        <button class="btn btn-primary btn-block" type="submit">Отправить анкету</button>
     </form>
 </main>
 
