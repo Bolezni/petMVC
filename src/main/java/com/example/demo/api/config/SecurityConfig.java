@@ -38,12 +38,12 @@ public class SecurityConfig {
                         .authenticationEntryPoint((req, res, e) -> {
                             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             res.setContentType("application/json;charset=UTF-8");
-                            res.getWriter().write("{\"error\":\"РўСЂРµР±СѓРµС‚СЃСЏ Р°РІС‚РѕСЂРёР·Р°С†РёСЏ\"}");
+                            res.getWriter().write("{\"error\":\"Требуется авторизация\"}");
                         })
                         .accessDeniedHandler((req, res, e) -> {
                             res.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             res.setContentType("application/json;charset=UTF-8");
-                            res.getWriter().write("{\"error\":\"РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РїСЂР°РІ\"}");
+                            res.getWriter().write("{\"error\":\"Недостаточно прав\"}");
                         }))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)

@@ -31,10 +31,10 @@ class PetMvpApplicationTests {
                   "email": "userTest@example.com",
                   "password": "SecurePass123",
                   "passwordRepeat": "SecurePass123",
-                  "role": "USER",
                   "phone": "+79991234591",
                   "name": "Dima",
                   "surname": "Yurchenko",
+                  "gender": "MAN",
                   "birthday": "2005-04-07"
                 }""";
 
@@ -52,8 +52,8 @@ class PetMvpApplicationTests {
                   "email": "not-an-email",
                   "password": "SecurePass123",
                   "passwordRepeat": "SecurePass123",
-                  "role": "USER",
-                  "phone": "+79991234567"
+                  "phone": "+79991234567",
+                  "gender": "MAN"
                 }""";
 
         mockMvc.perform(post("/api/v1/auth/register")
@@ -71,8 +71,8 @@ class PetMvpApplicationTests {
                   "email": "user2@example.com",
                   "password": "SecurePass123",
                   "passwordRepeat": "DifferentPass456",
-                  "role": "USER",
-                  "phone": "+79991234567"
+                  "phone": "+79991234567",
+                  "gender": "MAN"
                 }""";
 
         mockMvc.perform(post("/api/v1/auth/register")
@@ -89,8 +89,8 @@ class PetMvpApplicationTests {
                   "email": "logintest@example.com",
                   "password": "SecurePass123",
                   "passwordRepeat": "SecurePass123",
-                  "role": "USER",
-                  "phone": "+79991234568"
+                  "phone": "+79991234568",
+                  "gender": "WOMAN"
                 }""";
 
         // сначала регистрируем пользователя — иначе логиниться будет некому
@@ -110,7 +110,7 @@ class PetMvpApplicationTests {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").exists()); // подставь реальное имя поля токена в ответе
+                .andExpect(jsonPath("$.token").exists());
     }
 
     @Test

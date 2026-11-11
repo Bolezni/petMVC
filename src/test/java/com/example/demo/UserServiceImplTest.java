@@ -11,7 +11,26 @@ import com.example.demo.api.service.authentication.BaseRegisterService;
 import com.example.demo.store.entities.Gender;
 import com.example.demo.store.entities.UserEntity;
 import com.example.demo.store.repo.UserRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.LocalDate;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceImplTest {
@@ -52,7 +71,7 @@ public class UserServiceImplTest {
     @Test
     void createUser() {
         RegisterRequest request = new RegisterRequest(
-                "test@mail.ru", "123456", "123456", "USER",
+                "test@mail.ru", "123456", "123456",
                 "89101714588", "Dima", null, Gender.MAN, LocalDate.of(2005, 4, 7));
 
         when(passwordEncoder.encode("123456")).thenReturn("encoded_123456");
