@@ -1,0 +1,11 @@
+# HTTPS и реверс-прокси. Домен задаётся переменной DOMAIN в .env.
+{$DOMAIN:localhost} {
+	encode zstd gzip
+
+	# Мультипарт до 55 МБ (видео упражнений и материалы пользователя)
+	request_body {
+		max_size 60MB
+	}
+
+	reverse_proxy app:8080
+}
