@@ -1,6 +1,8 @@
 package com.example.demo.api.exception;
 
+import com.example.demo.api.exception.exeptions.ConflictException;
 import com.example.demo.api.exception.exeptions.NotFoundException;
+import io.jsonwebtoken.JwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -55,6 +57,19 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(NotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ResponseEntity<Map<String, String>> handleConflict(ConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", ex.getMessage()));
+    }
+
+    // просроченный, поддельный или не тот тип токена
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<Map<String, String>> handleJwt(JwtException ex) {
+        log.warn("Отклонён токен: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", "Недействительный токен"));
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

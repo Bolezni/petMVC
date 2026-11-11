@@ -34,15 +34,17 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void createQuestionnaire(QuestionnaireCreateDto dto) {
-        UserEntity user = CheckAuthUtil.getAuthUser();
+        save(CheckAuthUtil.getAuthUser(), dto);
+    }
 
-        QuestionnaireEntity questionnaire = QuestionnaireEntity.builder()
-                .user(user)
-                .schemaVersion(dto.schemaVersion())
-                .data(buildData(dto))
-                .build();
+    @Override
+    @Transactional
+    public void createQuestionnaireForUser(Long userId, QuestionnaireCreateDto dto) {
+        UserEntity user = userRepository.findById(userId)
+                .filter(u -> u.getRole() == Roles.USER)
+                .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
-        repository.save(questionnaire);
+        save(user, dto);
     }
 
     @Transactional(readOnly = true)
@@ -60,6 +62,12 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
         );
     }
 
+    @Transactional(readOnly = true)
+    @Override
+    public QuestionnaireResponseDto getMyQuestionnaire() {
+        return getQuestionnaireByUserId(CheckAuthUtil.getAuthUser().getId());
+    }
+
     //TODO: Сделать тесты
     @Transactional(readOnly = true)
     @Override
@@ -68,6 +76,16 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
         return PageResponse.from(
                 repository.findUsersWithQuestionnaire(Roles.USER, pageable)
         );
+    }
+
+    private void save(UserEntity user, QuestionnaireCreateDto dto) {
+        QuestionnaireEntity questionnaire = QuestionnaireEntity.builder()
+                .user(user)
+                .schemaVersion(dto.schemaVersion())
+                .data(buildData(dto))
+                .build();
+
+        repository.save(questionnaire);
     }
 
     private Map<String, Object> buildData(QuestionnaireCreateDto dto) {

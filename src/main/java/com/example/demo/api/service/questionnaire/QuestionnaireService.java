@@ -8,7 +8,13 @@ import com.example.demo.api.dto.UserListItemDto;
 public interface QuestionnaireService {
     void createQuestionnaire(QuestionnaireCreateDto dto);
 
+    /** Специалист заполняет анкету за пользователя (созвон, помощь на старте). */
+    void createQuestionnaireForUser(Long userId, QuestionnaireCreateDto dto);
+
     QuestionnaireResponseDto getQuestionnaireByUserId(Long userId);
+
+    /** Последняя анкета текущего пользователя. */
+    QuestionnaireResponseDto getMyQuestionnaire();
 
     PageResponse<UserListItemDto> getUsersWithQuestionnaire(int page, int size);
 }

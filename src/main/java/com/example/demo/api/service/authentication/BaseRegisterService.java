@@ -1,6 +1,7 @@
 package com.example.demo.api.service.authentication;
 
 import com.example.demo.api.dto.RegisterRequest;
+import com.example.demo.api.exception.exeptions.ConflictException;
 import com.example.demo.store.entities.Roles;
 import com.example.demo.store.entities.UserEntity;
 import com.example.demo.store.repo.UserRepository;
@@ -37,18 +38,18 @@ public class BaseRegisterService implements RegisterService {
         String passwordRepeat = request.passwordRepeat().trim();
 
         if (!password.equals(passwordRepeat)) {
-            log.error("Пароли не совпадают");
+            log.warn("Пароли не совпадают");
             throw new RuntimeException("Пароли не совпадают");
         }
 
         if (userRepository.existsByEmail(email)) {
-            log.error("Пользователь с таким Email уже создан");
-            throw new RuntimeException("Пользователь с таким Email уже создан");
+            log.warn("Пользователь с таким Email уже создан");
+            throw new ConflictException("Пользователь с таким Email уже создан");
         }
 
         if (userRepository.existsByPhone(phone)) {
-            log.error("Пользователь с таким номером телефона уже создан");
-            throw new RuntimeException("Пользователь с таким номером телефона уже создан");
+            log.warn("Пользователь с таким номером телефона уже создан");
+            throw new ConflictException("Пользователь с таким номером телефона уже создан");
         }
 
         String name = request.name() != null ? request.name().trim() : "anonymous";

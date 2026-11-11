@@ -3,6 +3,7 @@ package com.example.demo.api.service.authentication;
 import com.example.demo.api.dto.AuthenticationRequest;
 import com.example.demo.api.dto.AuthenticationResponse;
 import com.example.demo.api.security.jwt.JwtUtil;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -33,5 +34,21 @@ public class BaseAuthenticationService implements AuthenticationService {
         String refreshToken = jwtUtil.buildRefreshToken(userDetails);
 
         return new AuthenticationResponse(jwtToken, refreshToken, "Bearer");
+    }
+
+    @Override
+    public AuthenticationResponse refresh(String refreshToken) {
+        // подпись и срок проверяются при разборе токена
+        if (!jwtUtil.isRefreshToken(refreshToken)) {
+            throw new JwtException("Ожидается refresh-токен");
+        }
+
+        String email = jwtUtil.usernameFromToken(refreshToken);
+        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+        return new AuthenticationResponse(
+                jwtUtil.buildJwtToken(userDetails),
+                jwtUtil.buildRefreshToken(userDetails),
+                "Bearer");
     }
 }

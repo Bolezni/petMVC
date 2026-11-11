@@ -5,4 +5,6 @@ import com.example.demo.api.dto.AuthenticationResponse;
 
 public interface AuthenticationService {
     AuthenticationResponse authentication(AuthenticationRequest request);
+
+    AuthenticationResponse refresh(String refreshToken);
 }

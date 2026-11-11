@@ -36,6 +36,12 @@ public class UserController {
         service.createQuestionnaire(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+    @GetMapping("/questionnaire")
+    public QuestionnaireResponseDto myQuestionnaire() {
+        return service.getMyQuestionnaire();
+    }
+
     @PostMapping(value = "/media", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public MediaResponseDto upload(@RequestParam("file") MultipartFile file) {
         return mediaService.upload(file);

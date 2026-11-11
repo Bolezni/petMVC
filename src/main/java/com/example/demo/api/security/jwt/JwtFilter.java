@@ -42,6 +42,14 @@ public class JwtFilter extends OncePerRequestFilter {
                 && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
                 String token = authHeader.substring(7);
+
+                // refresh-токен живёт дольше и не должен давать доступ к API
+                if (!jwtUtil.isAccessToken(token)) {
+                    log.warn("Отклонён токен типа {} в Authorization", jwtUtil.tokenType(token));
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
                 String email = jwtUtil.usernameFromToken(token);
 
                 if (email != null) {

@@ -6,9 +6,11 @@ import com.example.demo.api.dto.QuestionnaireCreateDto;
 import com.example.demo.api.dto.QuestionnaireResponseDto;
 import com.example.demo.api.dto.UserListItemDto;
 import com.example.demo.api.service.questionnaire.QuestionnaireService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,11 +21,15 @@ public class SpecialistController {
 
     private final QuestionnaireService service;
 
-    //TODO: Tests
-    @PostMapping("/questionnaires")
-    public ResponseEntity<Void> createQuestionnaire(QuestionnaireCreateDto dto){
-        service.createQuestionnaire(dto);
-        return ResponseEntity.ok().build();
+    /**
+     * Анкета заполняется на конкретного пользователя, а не на текущего специалиста.
+     * Нужно для сценария, когда специалист помогает заполнить анкету на созвоне.
+     */
+    @PostMapping("/users/{userId}/questionnaires")
+    public ResponseEntity<Void> createQuestionnaire(@PathVariable Long userId,
+                                                    @Valid @RequestBody QuestionnaireCreateDto dto){
+        service.createQuestionnaireForUser(userId, dto);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping("/questionnaires/{userId}")

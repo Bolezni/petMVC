@@ -16,6 +16,14 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
+    /**
+     * Тип токена хранится в claim. Refresh нельзя использовать для вызовов API,
+     * access нельзя обменять на новую пару — иначе смысл двух токенов теряется.
+     */
+    public static final String CLAIM_TYPE = "typ";
+    public static final String TYPE_ACCESS = "access";
+    public static final String TYPE_REFRESH = "refresh";
+
     @Value("${jwt.secret}")
     private String secretKey;
 
@@ -60,15 +68,28 @@ public class JwtUtil {
         return getClaim(token, Claims::getSubject);
     }
 
+    public String tokenType(String token){
+        return getClaim(token, claims -> claims.get(CLAIM_TYPE, String.class));
+    }
+
+    public boolean isAccessToken(String token){
+        return TYPE_ACCESS.equals(tokenType(token));
+    }
+
+    public boolean isRefreshToken(String token){
+        return TYPE_REFRESH.equals(tokenType(token));
+    }
+
     public boolean isTokenValidate(String token, UserDetails userDetails){
         boolean isValid = validateToken(token);
         String username = usernameFromToken(token);
         return (username.equals(userDetails.getUsername()) && isValid);
     }
 
-    private String buildToken(UserDetails userDetails, long expirationTime){
+    private String buildToken(UserDetails userDetails, long expirationTime, String type){
         return Jwts.builder()
                 .subject(userDetails.getUsername())
+                .claim(CLAIM_TYPE, type)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(getSignKey())
@@ -76,10 +97,10 @@ public class JwtUtil {
     }
 
     public String buildJwtToken(UserDetails userDetails){
-        return buildToken(userDetails, jwtExpiration);
+        return buildToken(userDetails, jwtExpiration, TYPE_ACCESS);
     }
 
     public String buildRefreshToken(UserDetails userDetails){
-        return buildToken(userDetails, refreshExpiration);
+        return buildToken(userDetails, refreshExpiration, TYPE_REFRESH);
     }
 }
