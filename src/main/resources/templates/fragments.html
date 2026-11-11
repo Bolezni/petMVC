@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<header class="topbar" th:fragment="topbar">
+    <a class="brand" th:href="@{/app}">petMVP</a>
+    <form method="post" th:action="@{/logout}"
+          th:if="${#authentication != null and #authentication.name != 'anonymousUser'}">
+        <button class="link-button" type="submit">Выйти</button>
+    </form>
+</header>
+
+<div class="alert alert-error" th:fragment="error(message)">
+    <span th:text="${message}">Ошибка</span>
+</div>
+
+</body>
+</html>

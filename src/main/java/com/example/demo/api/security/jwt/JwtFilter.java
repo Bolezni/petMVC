@@ -2,6 +2,7 @@ package com.example.demo.api.security.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,9 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
+    /** Токен для браузера: кладём в httpOnly-cookie, чтобы страницы работали без JS. */
+    public static final String ACCESS_COOKIE = "access_token";
+
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
@@ -36,13 +40,10 @@ public class JwtFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        String token = resolveToken(request);
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")
-                && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             try {
-                String token = authHeader.substring(7);
-
                 // refresh-токен живёт дольше и не должен давать доступ к API
                 if (!jwtUtil.isAccessToken(token)) {
                     log.warn("Отклонён токен типа {} в Authorization", jwtUtil.tokenType(token));
@@ -70,5 +71,25 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * API-клиенты присылают заголовок Authorization, браузер — cookie.
+     */
+    private String resolveToken(HttpServletRequest request) {
+        String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (ACCESS_COOKIE.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+        return null;
     }
 }

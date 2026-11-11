@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Анкета — petMVP</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="page">
+
+<div th:replace="~{fragments :: topbar}"></div>
+
+<main class="container">
+    <h1>Анкета</h1>
+    <p class="muted">Займёт пару минут. Чем точнее ответы, тем полезнее программа.</p>
+
+    <form method="post" th:action="@{/app/questionnaire}" class="card form">
+
+        <label class="field">
+            <span>С чем вы пришли? Что беспокоит?</span>
+            <textarea name="request" rows="4" required
+                      placeholder="Например: сижу за компьютером, болит поясница, хочу вернуть форму"></textarea>
+        </label>
+
+        <label class="field">
+            <span>Цели — по одной на строку</span>
+            <textarea name="goals" rows="3" required
+                      placeholder="Убрать боль в пояснице&#10;Подтянуть спину&#10;Заниматься 3 раза в неделю"></textarea>
+        </label>
+
+        <label class="field">
+            <span>Самочувствие сейчас</span>
+            <textarea name="wellbeing" rows="2"
+                      placeholder="Например: устаю к вечеру, болит шея"></textarea>
+        </label>
+
+        <label class="field">
+            <span>Ограничения и травмы — по одной на строку</span>
+            <textarea name="restrictions" rows="3"
+                      placeholder="Нельзя нагружать колено&#10;Была травма плеча"></textarea>
+        </label>
+
+        <button class="btn btn-primary" type="submit">Отправить анкету</button>
+    </form>
+</main>
+
+</body>
+</html>

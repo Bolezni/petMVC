@@ -27,7 +27,6 @@ public class AuthenticationController {
         registerService.register(request);
         return ResponseEntity.ok().build();
     }
-    //Исправить дыру с Role
 
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@Valid @RequestBody AuthenticationRequest request){

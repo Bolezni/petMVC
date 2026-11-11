@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Вход — petMVP</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="page">
+
+<div th:replace="~{fragments :: topbar}"></div>
+
+<main class="container">
+    <h1>Вход</h1>
+
+    <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
+
+    <form method="post" th:action="@{/login}" class="card form">
+        <label class="field">
+            <span>Email</span>
+            <input type="email" name="email" required autocomplete="email">
+        </label>
+
+        <label class="field">
+            <span>Пароль</span>
+            <input type="password" name="password" required autocomplete="current-password">
+        </label>
+
+        <button class="btn btn-primary" type="submit">Войти</button>
+    </form>
+
+    <p class="muted">
+        Нет аккаунта? <a th:href="@{/register}">Зарегистрироваться</a>
+    </p>
+</main>
+
+</body>
+</html>

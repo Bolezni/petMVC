@@ -2,6 +2,7 @@ package com.example.demo.api.config;
 
 import com.example.demo.api.security.jwt.JwtFilter;
 import com.example.demo.store.entities.Roles;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +28,12 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/api/v1/auth/**").permitAll()
+                .formLogin(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        // страницы входа и статика доступны без токена
+                        .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/favicon.ico").permitAll()
                         .requestMatchers("/api/v1/specialist/**").hasAuthority(Roles.SPECIALIST.name())
                         .requestMatchers("/api/v1/user/**").hasAuthority(Roles.USER.name())
                         .requestMatchers("/api/v1/admin/**").permitAll()
@@ -36,9 +42,14 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, e) -> {
-                            res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            res.setContentType("application/json;charset=UTF-8");
-                            res.getWriter().write("{\"error\":\"Требуется авторизация\"}");
+                            // страницы уводим на вход, API отвечает JSON
+                            if (isApi(req)) {
+                                res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                                res.setContentType("application/json;charset=UTF-8");
+                                res.getWriter().write("{\"error\":\"Требуется авторизация\"}");
+                                return;
+                            }
+                            res.sendRedirect("/login");
                         })
                         .accessDeniedHandler((req, res, e) -> {
                             res.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -49,5 +60,9 @@ public class SecurityConfig {
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
 
+    }
+
+    private boolean isApi(HttpServletRequest request) {
+        return request.getRequestURI().startsWith("/api/");
     }
 }

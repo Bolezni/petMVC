@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Регистрация — petMVP</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="page">
+
+<div th:replace="~{fragments :: topbar}"></div>
+
+<main class="container">
+    <h1>Регистрация</h1>
+
+    <div class="alert alert-error" th:if="${error}" th:text="${error}"></div>
+
+    <form method="post" th:action="@{/register}" class="card form">
+        <label class="field">
+            <span>Email</span>
+            <input type="email" name="email" required autocomplete="email">
+        </label>
+
+        <label class="field">
+            <span>Пароль</span>
+            <input type="password" name="password" required minlength="6" autocomplete="new-password">
+        </label>
+
+        <label class="field">
+            <span>Пароль ещё раз</span>
+            <input type="password" name="passwordRepeat" required minlength="6" autocomplete="new-password">
+        </label>
+
+        <label class="field">
+            <span>Телефон</span>
+            <input type="tel" name="phone" required placeholder="+79991234567" pattern="\+7\d{10}">
+        </label>
+
+        <label class="field">
+            <span>Как вас зовут</span>
+            <input type="text" name="name" maxlength="100">
+        </label>
+
+        <label class="field">
+            <span>Пол</span>
+            <select name="gender" required>
+                <option th:each="g : ${genders}" th:value="${g}" th:text="${g.name() == 'MAN' ? 'Мужской' : 'Женский'}"></option>
+            </select>
+        </label>
+
+        <button class="btn btn-primary" type="submit">Создать аккаунт</button>
+    </form>
+
+    <p class="muted">
+        Уже есть аккаунт? <a th:href="@{/login}">Войти</a>
+    </p>
+</main>
+
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Кабинет — petMVP</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="page">
+
+<div th:replace="~{fragments :: topbar}"></div>
+
+<main class="container">
+    <h1>Личный кабинет</h1>
+
+    <section class="card" th:if="${questionnaire == null}">
+        <h2>Шаг 1. Анкета</h2>
+        <p class="muted">
+            Ответьте на несколько вопросов — специалист посмотрит их и назначит программу.
+        </p>
+        <a class="btn btn-primary" th:href="@{/app/questionnaire}">Заполнить анкету</a>
+    </section>
+
+    <section class="card" th:if="${questionnaire != null}">
+        <h2>Анкета</h2>
+        <p class="muted">Заполнена — специалист увидит её и подготовит программу.</p>
+        <p th:text="${questionnaire.data['request']}"></p>
+        <a class="btn" th:href="@{/app/questionnaire}">Заполнить заново</a>
+    </section>
+
+    <section class="card">
+        <h2>Программы</h2>
+
+        <p class="muted" th:if="${#lists.isEmpty(programs)}">
+            Пока нет назначенных программ. Как только специалист её составит,
+            она появится здесь.
+        </p>
+
+        <ul class="list" th:if="${!#lists.isEmpty(programs)}">
+            <li th:each="p : ${programs}">
+                <a th:href="@{/app/programs/{id}(id=${p.id})}" th:text="${p.title}"></a>
+                <span class="badge" th:text="${p.status}"></span>
+            </li>
+        </ul>
+    </section>
+</main>
+
+</body>
+</html>

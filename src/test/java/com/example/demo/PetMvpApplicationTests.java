@@ -128,19 +128,4 @@ class PetMvpApplicationTests {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.email").exists());
     }
-
-//    @Test
-//    void login_withNonexistentUser_returnsUnauthorized() throws Exception {
-//        String request = """
-//                {
-//                    "email": "doesnotexist@example.com",
-//                    "password": "SecurePass123"
-//                }""";
-//
-//        mockMvc.perform(post("/api/v1/auth/login")
-//                        .content(request)
-//                        .contentType(MediaType.APPLICATION_JSON))
-//                .andDo(print())
-//                .andExpect(status().isUnauthorized());
-//    }
 }

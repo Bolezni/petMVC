@@ -24,12 +24,17 @@ spring:
   flyway:
     enabled: true
 
+  thymeleaf:
+    cache: ${THYMELEAF_CACHE:true}
+
 server:
   port: ${PORT:8080}
 
 jwt:
   secret: ${JWT_SECRET}
-  access-ttl-ms: ${JWT_ACCESS_TTL_MS:900000}
+  # 12 часов: браузерная сессия не должна разваливаться каждые 15 минут.
+  # Для мобильного клиента срок можно уменьшить отдельной переменной.
+  access-ttl-ms: ${JWT_ACCESS_TTL_MS:43200000}
   refresh-ttl-ms: ${JWT_REFRESH_TTL_MS:2592000000}
 
 app:

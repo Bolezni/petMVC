@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${program.title} + ' — petMVP'">Программа</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="page">
+
+<div th:replace="~{fragments :: topbar}"></div>
+
+<main class="container">
+    <a class="back" th:href="@{/app}">← В кабинет</a>
+
+    <h1 th:text="${program.title}">Программа</h1>
+
+    <div class="alert alert-ok" th:if="${param.done}">
+        Отмечено. Спасибо за отметку!
+    </div>
+
+    <section class="card" th:if="${program.specialistComment != null and !program.specialistComment.isBlank()}">
+        <h2>Комментарий специалиста</h2>
+        <p th:text="${program.specialistComment}"></p>
+    </section>
+
+    <section class="card" th:if="${program.priorities != null and !#lists.isEmpty(program.priorities)}">
+        <h2>Приоритеты</h2>
+        <ul class="list">
+            <li th:each="p : ${program.priorities}" th:text="${p}"></li>
+        </ul>
+    </section>
+
+    <h2>Упражнения</h2>
+
+    <article class="card exercise" th:each="item, i : ${program.items}">
+        <h3>
+            <span th:text="${i.count} + '. '"></span>
+            <span th:text="${item.exerciseName}"></span>
+        </h3>
+
+        <p class="muted" th:if="${item.description != null}" th:text="${item.description}"></p>
+
+        <p class="meta">
+            <span th:if="${item.sets != null}" th:text="'Подходы: ' + ${item.sets}"></span>
+            <span th:if="${item.reps != null}" th:text="'Повторения: ' + ${item.reps}"></span>
+            <span th:if="${item.muscleGroup != null}" th:text="${item.muscleGroup}"></span>
+        </p>
+
+        <p th:if="${item.note != null and !item.note.isBlank()}" class="note" th:text="${item.note}"></p>
+
+        <a class="btn" th:if="${item.videoUrl != null and !item.videoUrl.isBlank()}"
+           th:href="${item.videoUrl}" target="_blank" rel="noopener">Смотреть видео</a>
+
+        <form method="post" class="form complete"
+              th:action="@{/app/programs/{id}/items/{itemId}/completion(id=${program.id}, itemId=${item.id})}">
+            <label class="field">
+                <span>Как прошло? (необязательно)</span>
+                <textarea name="feedback" rows="2" placeholder="Легко / тяжело / болит"></textarea>
+            </label>
+            <button class="btn btn-primary" type="submit">Выполнено</button>
+        </form>
+    </article>
+</main>
+
+</body>
+</html>
