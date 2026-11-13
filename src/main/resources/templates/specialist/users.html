@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
+    <title>Пользователи — petMVP</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232563eb'/%3E%3C/svg%3E">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments :: topbar}"></div>
+
+<main class="container">
+    <h1>Пользователи</h1>
+    <p class="muted">Все, кто заполнил анкету. Сначала — свежие.</p>
+
+    <div class="empty" th:if="${#lists.isEmpty(users.content)}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+        <div>Анкет пока нет.</div>
+    </div>
+
+    <section class="card" th:if="${!#lists.isEmpty(users.content)}">
+        <ul class="list">
+            <li th:each="u : ${users.content}">
+                <div class="grow">
+                    <a th:href="@{/specialist/users/{id}(id=${u.id})}" th:text="${u.email}"></a>
+                    <div class="muted small" th:text="${u.phone}"></div>
+                </div>
+                <span class="badge" th:text="${u.lastQuestionnaireAt}"></span>
+            </li>
+        </ul>
+    </section>
+
+    <nav class="pager" th:if="${users.totalPages > 1}">
+        <a class="btn btn-sm" th:if="${users.page > 0}"
+           th:href="@{/specialist(page=${users.page - 1})}">← Назад</a>
+        <span class="muted small" th:text="${'Страница ' + (users.page + 1) + ' из ' + users.totalPages}"></span>
+        <a class="btn btn-sm" th:if="${users.page + 1 < users.totalPages}"
+           th:href="@{/specialist(page=${users.page + 1})}">Дальше →</a>
+    </nav>
+</main>
+
+</body>
+</html>

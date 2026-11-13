@@ -7,6 +7,7 @@
     <title>Кабинет — petMVP</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232563eb'/%3E%3C/svg%3E">
     <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
 </head>
 <body>
 
@@ -17,17 +18,15 @@
     <p class="muted">Что происходит с вашей программой прямо сейчас.</p>
 
     <nav class="steps" aria-label="Этапы">
-        <div class="step" th:classappend="${questionnaire != null} ? 'step-done' : 'step-current'">
-            <span class="step-num"
-                  th:text="${questionnaire != null} ? '✓' : '1'">1</span>
+        <div class="step" th:classappend="${questionnaire != null ? 'step-done' : 'step-current'}">
+            <span class="step-num" th:text="${questionnaire != null ? '✓' : '1'}">1</span>
             <span>Анкета</span>
         </div>
-        <div class="step" th:classappend="${!#lists.isEmpty(programs)} ? 'step-done' : (questionnaire != null ? 'step-current' : '')">
-            <span class="step-num"
-                  th:text="${!#lists.isEmpty(programs)} ? '✓' : '2'">2</span>
+        <div class="step" th:classappend="${!#lists.isEmpty(programs) ? 'step-done' : (questionnaire != null ? 'step-current' : '')}">
+            <span class="step-num" th:text="${!#lists.isEmpty(programs) ? '✓' : '2'}">2</span>
             <span>Программа</span>
         </div>
-        <div class="step" th:classappend="${!#lists.isEmpty(programs)} ? 'step-current' : ''">
+        <div class="step" th:classappend="${!#lists.isEmpty(programs) ? 'step-current' : ''}">
             <span class="step-num">3</span>
             <span>Тренировки</span>
         </div>
@@ -53,9 +52,22 @@
 
     <section class="card">
         <div class="section-title">
+            <h2>Фото и видео</h2>
+            <span class="badge" th:if="${!#lists.isEmpty(media)}"
+                  th:text="${#lists.size(media) + ' шт.'}"></span>
+        </div>
+        <p class="muted" th:if="${#lists.isEmpty(media)}">
+            Приложите фото или короткое видео — специалисту так проще оценить запрос.
+        </p>
+        <a class="btn btn-sm" th:href="@{/app/media}"
+           th:text="${#lists.isEmpty(media) ? 'Добавить материалы' : 'Открыть материалы'}"></a>
+    </section>
+
+    <section class="card">
+        <div class="section-title">
             <h2>Программы</h2>
             <span class="badge" th:if="${!#lists.isEmpty(programs)}"
-                  th:text="${#lists.size(programs)} + ' шт.'"></span>
+                  th:text="${#lists.size(programs) + ' шт.'}"></span>
         </div>
 
         <div class="empty" th:if="${#lists.isEmpty(programs)}">
@@ -68,8 +80,8 @@
             <li th:each="p : ${programs}">
                 <a th:href="@{/app/programs/{id}(id=${p.id})}" th:text="${p.title}"></a>
                 <span class="badge"
-                      th:classappend="${p.status.name() == 'ACTIVE'} ? 'badge-active' : (${p.status.name() == 'COMPLETED'} ? 'badge-done' : '')"
-                      th:text="${p.status.name() == 'ACTIVE'} ? 'Активна' : (${p.status.name() == 'COMPLETED'} ? 'Завершена' : 'В архиве')"></span>
+                      th:classappend="${p.status.name() == 'ACTIVE' ? 'badge-active' : (p.status.name() == 'COMPLETED' ? 'badge-done' : '')}"
+                      th:text="${p.status.name() == 'ACTIVE' ? 'Активна' : (p.status.name() == 'COMPLETED' ? 'Завершена' : 'В архиве')}"></span>
             </li>
         </ul>
     </section>

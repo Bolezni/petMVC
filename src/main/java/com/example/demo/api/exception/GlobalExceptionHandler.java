@@ -9,11 +9,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -52,6 +54,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
         return ResponseEntity.badRequest()
                 .body(Map.of("error", "Неверное значение параметра: " + ex.getName()));
+    }
+
+    // запрос без обязательной части (например, форма без файла)
+    @ExceptionHandler(ServletRequestBindingException.class)
+    public ResponseEntity<Map<String, String>> handleBinding(ServletRequestBindingException ex) {
+        return ResponseEntity.badRequest().body(Map.of("error", "В запросе не хватает обязательных данных"));
+    }
+
+    // битый multipart: не приходит часть file, сломан boundary и т.п.
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<Map<String, String>> handleMultipart(MultipartException ex) {
+        log.warn("Некорректный multipart-запрос: {}", ex.getMessage());
+        return ResponseEntity.badRequest().body(Map.of("error", "Некорректная форма с файлом"));
     }
 
     @ExceptionHandler(NotFoundException.class)

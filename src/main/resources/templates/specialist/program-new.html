@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
+    <title>Новая программа — petMVP</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232563eb'/%3E%3C/svg%3E">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments :: topbar}"></div>
+
+<main class="container">
+    <a class="back" th:href="@{/specialist/users/{id}(id=${userId})}">← К карточке</a>
+
+    <h1>Новая программа</h1>
+    <p class="muted">Выберите упражнения из библиотеки и задайте нагрузку.</p>
+
+    <div class="alert alert-error" th:if="${param.empty}">
+        Не выбрано ни одного упражнения.
+    </div>
+    <div class="alert alert-error" th:if="${param.error}">
+        Не удалось сохранить программу. Проверьте поля и попробуйте снова.
+    </div>
+
+    <div class="empty" th:if="${#lists.isEmpty(exercises)}">
+        <div>Библиотека упражнений пуста.</div>
+        <a class="btn btn-sm" th:href="@{/specialist/exercises}">Добавить упражнения</a>
+    </div>
+
+    <form method="post" th:action="@{/specialist/users/{id}/programs(id=${userId})}" class="form"
+          th:if="${!#lists.isEmpty(exercises)}">
+
+        <fieldset class="card">
+            <legend>Описание</legend>
+
+            <label class="field">
+                <span class="field-label">Название программы</span>
+                <input type="text" name="title" required maxlength="255" placeholder="Например: Возвращение к движению">
+            </label>
+
+            <label class="field">
+                <span class="field-label">Комментарий пользователю</span>
+                <textarea name="comment" rows="3" placeholder="С чего начать, на что смотреть, когда остановиться"></textarea>
+            </label>
+
+            <label class="field">
+                <span class="field-label">Приоритеты</span>
+                <textarea name="priorities" rows="3" placeholder="Боль в пояснице&#10;Мягкая мобильность&#10;Регулярность"></textarea>
+                <span class="hint">Каждый пункт — с новой строки.</span>
+            </label>
+        </fieldset>
+
+        <fieldset class="card">
+            <legend>Упражнения</legend>
+
+            <p class="hint">Заполняйте только нужные строки, пустые игнорируются.</p>
+
+            <div class="row-grid row-head">
+                <span>Упражнение</span>
+                <span>Подходы</span>
+                <span>Повторы</span>
+                <span>Заметка</span>
+            </div>
+
+            <div class="row-grid" th:each="r : ${rows}">
+                <select th:name="${'exerciseId' + r}">
+                    <option value="">— не выбрано —</option>
+                    <option th:each="ex : ${exercises}" th:value="${ex.id}"
+                            th:text="${ex.name + ' · ' + ex.muscleGroup}"></option>
+                </select>
+                <input type="number" th:name="${'sets' + r}" min="1" max="100" placeholder="3">
+                <input type="number" th:name="${'reps' + r}" min="1" max="1000" placeholder="12">
+                <input type="text" th:name="${'note' + r}" maxlength="1000" placeholder="Медленно">
+            </div>
+        </fieldset>
+
+        <button class="btn btn-primary btn-block" type="submit">Назначить программу</button>
+    </form>
+</main>
+
+</body>
+</html>

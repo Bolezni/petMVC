@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
+    <title th:text="${program.title + ' — petMVP'}">Программа</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232563eb'/%3E%3C/svg%3E">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments :: topbar}"></div>
+
+<main class="container">
+    <a class="back" th:href="@{/specialist/users/{id}(id=${program.userId})}">← К пользователю</a>
+
+    <h1 th:text="${program.title}">Программа</h1>
+
+    <ul class="chips">
+        <li class="chip-strong" th:text="${'Упражнений: ' + #lists.size(program.items)}"></li>
+        <li th:if="${program.status.name() == 'ACTIVE'}">Активна</li>
+        <li th:if="${program.status.name() == 'COMPLETED'}">Завершена</li>
+    </ul>
+
+    <section class="card" th:if="${program.specialistComment != null and !program.specialistComment.isBlank()}">
+        <h2>Комментарий</h2>
+        <p th:text="${program.specialistComment}"></p>
+    </section>
+
+    <section class="card" th:if="${program.priorities != null and !#lists.isEmpty(program.priorities)}">
+        <h2>Приоритеты</h2>
+        <ul class="chips">
+            <li th:each="p : ${program.priorities}" th:text="${p}"></li>
+        </ul>
+    </section>
+
+    <section class="card">
+        <h2>Упражнения</h2>
+        <ul class="list">
+            <li th:each="item : ${program.items}">
+                <div class="grow">
+                    <div th:text="${item.exerciseName}"></div>
+                    <div class="muted small">
+                        <span th:if="${item.sets != null}"
+                              th:text="${item.sets + ' × ' + item.reps + ' · '}"></span>
+                        <span th:text="${item.muscleGroup}"></span>
+                    </div>
+                    <div class="muted small" th:if="${item.note != null}" th:text="${item.note}"></div>
+                </div>
+            </li>
+        </ul>
+    </section>
+
+    <section class="card">
+        <div class="section-title">
+            <h2>Обратная связь</h2>
+            <span class="badge" th:if="${completions.totalElements > 0}"
+                  th:text="${completions.totalElements + ' отметок'}"></span>
+        </div>
+
+        <div class="empty" th:if="${#lists.isEmpty(completions.content)}">
+            <div>Пользователь пока ничего не отметил.</div>
+        </div>
+
+        <ul class="list" th:if="${!#lists.isEmpty(completions.content)}">
+            <li th:each="c : ${completions.content}">
+                <div class="grow">
+                    <div th:text="${c.exerciseName}"></div>
+                    <div class="muted small" th:if="${c.feedback != null}"
+                         th:text="${'«' + c.feedback + '»'}"></div>
+                </div>
+                <span class="badge" th:text="${c.completedAt}"></span>
+            </li>
+        </ul>
+    </section>
+</main>
+
+</body>
+</html>

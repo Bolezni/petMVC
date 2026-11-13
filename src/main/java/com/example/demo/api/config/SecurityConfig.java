@@ -38,6 +38,7 @@ public class SecurityConfig {
                         // страницы входа и статика доступны без токена
                         .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/favicon.ico").permitAll()
                         .requestMatchers("/api/v1/specialist/**").hasAuthority(Roles.SPECIALIST.name())
+                        .requestMatchers("/specialist/**").hasAuthority(Roles.SPECIALIST.name())
                         .requestMatchers("/api/v1/user/**").hasAuthority(Roles.USER.name())
                         .requestMatchers("/api/v1/admin/**").permitAll()
                         .requestMatchers("/error").permitAll()
@@ -55,6 +56,11 @@ public class SecurityConfig {
                             res.sendRedirect("/login");
                         })
                         .accessDeniedHandler((req, res, e) -> {
+                            // пользователь без прав на /specialist возвращается в свой кабинет
+                            if (!isApi(req)) {
+                                res.sendRedirect("/app");
+                                return;
+                            }
                             res.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             res.setContentType("application/json;charset=UTF-8");
                             res.getWriter().write("{\"error\":\"Недостаточно прав\"}");

@@ -1,12 +1,15 @@
 package com.example.demo.web;
 
 import com.example.demo.api.dto.CompletionResponse;
+import com.example.demo.api.dto.MediaResponseDto;
 import com.example.demo.api.dto.ProgramResponse;
 import com.example.demo.api.dto.ProgramSummaryResponse;
 import com.example.demo.api.dto.QuestionnaireCreateDto;
 import com.example.demo.api.dto.QuestionnaireResponseDto;
 import com.example.demo.api.exception.exeptions.NotFoundException;
+import com.example.demo.api.security.CheckAuthUtil;
 import com.example.demo.api.service.complete.CompletionService;
+import com.example.demo.api.service.media.MediaService;
 import com.example.demo.api.service.program.ProgramService;
 import com.example.demo.api.service.questionnaire.QuestionnaireService;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 import java.util.List;
@@ -29,6 +33,7 @@ public class AppController {
     private final QuestionnaireService questionnaireService;
     private final ProgramService programService;
     private final CompletionService completionService;
+    private final MediaService mediaService;
 
     @GetMapping
     public String dashboard(Model model) {
@@ -40,9 +45,11 @@ public class AppController {
         }
 
         List<ProgramSummaryResponse> programs = programService.myPrograms();
+        List<MediaResponseDto> media = mediaService.getByUser(CheckAuthUtil.getAuthUser().getId());
 
         model.addAttribute("questionnaire", questionnaire);
         model.addAttribute("programs", programs);
+        model.addAttribute("media", media);
         return "app/dashboard";
     }
 
@@ -66,6 +73,22 @@ public class AppController {
 
         questionnaireService.createQuestionnaire(dto);
         return "redirect:/app";
+    }
+
+    @GetMapping("/media")
+    public String media(Model model) {
+        model.addAttribute("media", mediaService.getByUser(CheckAuthUtil.getAuthUser().getId()));
+        return "app/media";
+    }
+
+    @PostMapping("/media")
+    public String uploadMedia(@RequestParam("file") MultipartFile file) {
+        try {
+            mediaService.upload(file);
+        } catch (RuntimeException ex) {
+            return "redirect:/app/media?error";
+        }
+        return "redirect:/app/media?uploaded";
     }
 
     @GetMapping("/programs/{id}")

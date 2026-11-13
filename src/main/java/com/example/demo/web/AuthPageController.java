@@ -7,12 +7,15 @@ import com.example.demo.api.exception.exeptions.ConflictException;
 import com.example.demo.api.service.authentication.AuthenticationService;
 import com.example.demo.api.service.authentication.RegisterService;
 import com.example.demo.store.entities.Gender;
+import com.example.demo.store.entities.Roles;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +30,7 @@ public class AuthPageController {
     private final AuthenticationService authenticationService;
     private final RegisterService registerService;
     private final AuthCookies authCookies;
+    private final UserDetailsService userDetailsService;
 
     @GetMapping("/")
     public String landing() {
@@ -36,7 +40,7 @@ public class AuthPageController {
     @GetMapping("/login")
     public String loginPage(@RequestParam(required = false) String error, Model model) {
         if (isAuthenticated()) {
-            return "redirect:/app";
+            return redirectHome();
         }
         if (error != null) {
             model.addAttribute("error", "Неверный email или пароль");
@@ -52,17 +56,17 @@ public class AuthPageController {
             AuthenticationResponse tokens = authenticationService.authentication(
                     new AuthenticationRequest(email.trim(), password));
             authCookies.write(response, tokens);
-            return "redirect:/app";
         } catch (Exception ex) {
             log.warn("Неудачный вход для {}: {}", email, ex.getMessage());
             return "redirect:/login?error";
         }
+        return redirectHome(email.trim());
     }
 
     @GetMapping("/register")
     public String registerPage(@RequestParam(required = false) String error, Model model) {
         if (isAuthenticated()) {
-            return "redirect:/app";
+            return redirectHome();
         }
         if (error != null) {
             model.addAttribute("error", "Пользователь с таким email или телефоном уже существует");
@@ -108,6 +112,20 @@ public class AuthPageController {
     public String logout(HttpServletResponse response) {
         authCookies.clear(response);
         return "redirect:/";
+    }
+
+    private String redirectHome() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        boolean specialist = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> Roles.SPECIALIST.name().equals(a.getAuthority()));
+        return specialist ? "redirect:/specialist" : "redirect:/app";
+    }
+
+    private String redirectHome(String email) {
+        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        boolean specialist = userDetails.getAuthorities().stream()
+                .anyMatch(a -> Roles.SPECIALIST.name().equals(a.getAuthority()));
+        return specialist ? "redirect:/specialist" : "redirect:/app";
     }
 
     private boolean isAuthenticated() {

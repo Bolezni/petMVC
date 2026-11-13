@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
+    <title>Карточка пользователя — petMVP</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232563eb'/%3E%3C/svg%3E">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments :: topbar}"></div>
+
+<main class="container">
+    <a class="back" th:href="@{/specialist}">← К списку</a>
+
+    <h1 th:text="${user != null ? user.email : 'Пользователь #' + userId}">Пользователь</h1>
+    <p class="muted" th:if="${user != null}" th:text="${user.phone}"></p>
+
+    <section class="card">
+        <div class="section-title">
+            <h2>Анкета</h2>
+            <span class="badge badge-done" th:if="${questionnaire != null}">Заполнена</span>
+            <span class="badge" th:if="${questionnaire == null}">Нет</span>
+        </div>
+
+        <div class="empty" th:if="${questionnaire == null}">
+            <div>Пользователь ещё не заполнил анкету.</div>
+        </div>
+
+        <div th:if="${questionnaire != null}" class="stack-16">
+            <div>
+                <div class="label">Запрос</div>
+                <p class="note" th:text="${questionnaire.data['request']}"></p>
+            </div>
+
+            <div>
+                <div class="label">Цели</div>
+                <ul class="chips">
+                    <li th:each="g : ${questionnaire.data['goals']}" th:text="${g}"></li>
+                </ul>
+            </div>
+
+            <div th:if="${questionnaire.data['wellbeing'] != null}">
+                <div class="label">Самочувствие</div>
+                <p th:text="${questionnaire.data['wellbeing']}"></p>
+            </div>
+
+            <div th:if="${questionnaire.data['restrictions'] != null and !#lists.isEmpty(questionnaire.data['restrictions'])}">
+                <div class="label">Ограничения</div>
+                <ul class="chips">
+                    <li th:each="r : ${questionnaire.data['restrictions']}" th:text="${r}"></li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="section-title">
+            <h2>Материалы</h2>
+            <span class="badge" th:if="${!#lists.isEmpty(media)}"
+                  th:text="${#lists.size(media) + ' шт.'}"></span>
+        </div>
+
+        <div class="empty" th:if="${#lists.isEmpty(media)}">
+            <div>Пользователь не приложил фото или видео.</div>
+        </div>
+
+        <div class="media-grid" th:if="${!#lists.isEmpty(media)}">
+            <figure class="media-item" th:each="m : ${media}">
+                <img th:if="${m.type.name() == 'PHOTO'}"
+                     th:src="@{'/api/v1/media/{id}/content'(id=${m.id})}"
+                     th:alt="${m.originalName}" loading="lazy">
+                <video th:if="${m.type.name() == 'VIDEO'}"
+                       th:src="@{'/api/v1/media/{id}/content'(id=${m.id})}"
+                       controls preload="metadata"></video>
+                <figcaption th:text="${m.originalName}">файл</figcaption>
+            </figure>
+        </div>
+    </section>
+
+    <section class="card">
+        <div class="section-title">
+            <h2>Программы</h2>
+            <a class="btn btn-sm btn-primary" th:href="@{/specialist/users/{id}/programs/new(id=${userId})}">
+                Составить программу
+            </a>
+        </div>
+
+        <div class="empty" th:if="${#lists.isEmpty(programs)}">
+            <div>Программ пока нет.</div>
+        </div>
+
+        <ul class="list" th:if="${!#lists.isEmpty(programs)}">
+            <li th:each="p : ${programs}">
+                <a th:href="@{/specialist/programs/{id}(id=${p.id})}" th:text="${p.title}"></a>
+                <span class="badge"
+                      th:classappend="${p.status.name() == 'ACTIVE' ? 'badge-active' : (p.status.name() == 'COMPLETED' ? 'badge-done' : '')}"
+                      th:text="${p.status.name() == 'ACTIVE' ? 'Активна' : (p.status.name() == 'COMPLETED' ? 'Завершена' : 'В архиве')}"></span>
+            </li>
+        </ul>
+    </section>
+</main>
+
+</body>
+</html>
