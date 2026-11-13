@@ -4,6 +4,7 @@ import com.example.demo.api.dto.ProgramCreateRequest;
 import com.example.demo.api.dto.ProgramItemRequest;
 import com.example.demo.api.dto.ProgramResponse;
 import com.example.demo.api.dto.ProgramSummaryResponse;
+import com.example.demo.api.dto.ProgramUpdateRequest;
 import com.example.demo.api.exception.exeptions.NotFoundException;
 import com.example.demo.api.security.CheckAuthUtil;
 import com.example.demo.store.entities.*;
@@ -38,16 +39,7 @@ public class ProgramServiceImpl implements ProgramService {
                 .filter(u -> u.getRole() == Roles.USER)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
 
-        List<Long> ids = request.items().stream()
-                .map(ProgramItemRequest::exerciseId).distinct().toList();
-
-        Map<Long, ExerciseEntity> exercises = exerciseRepository.findAllByIdInAndActiveTrue(ids)
-                .stream().collect(Collectors.toMap(ExerciseEntity::getId, Function.identity()));
-
-        List<Long> missing = ids.stream().filter(id -> !exercises.containsKey(id)).toList();
-        if (!missing.isEmpty()) {
-            throw new RuntimeException("Упражнения не найдены: " + missing);
-        }
+        Map<Long, ExerciseEntity> exercises = loadExercises(request.items());
 
         ProgramEntity program = new ProgramEntity();
         program.setUser(user);
@@ -56,12 +48,25 @@ public class ProgramServiceImpl implements ProgramService {
         program.setSpecialistComment(request.specialistComment());
         program.setPriorities(request.priorities());
 
-        List<ProgramItemRequest> items = request.items();
-        for (int i = 0; i < items.size(); i++) {
-            ProgramItemRequest item = items.get(i);
-            program.addItem(exercises.get(item.exerciseId()),
-                    item.sets(), item.reps(), item.note(), i);
-        }
+        fillItems(program, request.items(), exercises);
+
+        return ProgramResponse.from(programRepository.save(program));
+    }
+
+    @Transactional
+    @Override
+    public ProgramResponse update(Long id, ProgramUpdateRequest request) {
+        ProgramEntity program = findWithItems(id);
+
+        Map<Long, ExerciseEntity> exercises = loadExercises(request.items());
+
+        program.setTitle(request.title().trim());
+        program.setSpecialistComment(request.specialistComment());
+        program.setPriorities(request.priorities());
+
+        // orphanRemoval удалит старые позиции, новые добавятся с тем же порядком
+        program.getItems().clear();
+        fillItems(program, request.items(), exercises);
 
         return ProgramResponse.from(programRepository.save(program));
     }
@@ -107,6 +112,29 @@ public class ProgramServiceImpl implements ProgramService {
             throw new NotFoundException("Программа не найдена");
         }
         return ProgramResponse.from(program);
+    }
+
+    private void fillItems(ProgramEntity program, List<ProgramItemRequest> items,
+                           Map<Long, ExerciseEntity> exercises) {
+        for (int i = 0; i < items.size(); i++) {
+            ProgramItemRequest item = items.get(i);
+            program.addItem(exercises.get(item.exerciseId()),
+                    item.sets(), item.reps(), item.note(), i);
+        }
+    }
+
+    private Map<Long, ExerciseEntity> loadExercises(List<ProgramItemRequest> items) {
+        List<Long> ids = items.stream()
+                .map(ProgramItemRequest::exerciseId).distinct().toList();
+
+        Map<Long, ExerciseEntity> exercises = exerciseRepository.findAllByIdInAndActiveTrue(ids)
+                .stream().collect(Collectors.toMap(ExerciseEntity::getId, Function.identity()));
+
+        List<Long> missing = ids.stream().filter(id -> !exercises.containsKey(id)).toList();
+        if (!missing.isEmpty()) {
+            throw new RuntimeException("Упражнения не найдены: " + missing);
+        }
+        return exercises;
     }
 
     private ProgramEntity findWithItems(Long id) {

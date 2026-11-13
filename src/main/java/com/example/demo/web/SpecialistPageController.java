@@ -6,8 +6,10 @@ import com.example.demo.api.dto.ExerciseResponse;
 import com.example.demo.api.dto.PageResponse;
 import com.example.demo.api.dto.ProgramCreateRequest;
 import com.example.demo.api.dto.ProgramItemRequest;
+import com.example.demo.api.dto.ProgramItemResponse;
 import com.example.demo.api.dto.ProgramResponse;
 import com.example.demo.api.dto.ProgramSummaryResponse;
+import com.example.demo.api.dto.ProgramUpdateRequest;
 import com.example.demo.api.dto.QuestionnaireResponseDto;
 import com.example.demo.api.dto.UserListItemDto;
 import com.example.demo.api.exception.exeptions.NotFoundException;
@@ -40,8 +42,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SpecialistPageController {
 
-    /** Столько строк упражнений показываем в форме программы. */
-    private static final int PROGRAM_ROWS = 8;
+    /** Сколько пустых строк упражнений показываем в форме. */
+    private static final int VISIBLE_ROWS = 8;
+
+    /** Верхняя граница при разборе формы: совпадает с ограничением API. */
+    private static final int MAX_ROWS = 30;
 
     private final QuestionnaireService questionnaireService;
     private final ProgramService programService;
@@ -49,6 +54,10 @@ public class SpecialistPageController {
     private final MediaService mediaService;
     private final ExerciseService exerciseService;
     private final UserRepository userRepository;
+
+    /** Одна строка формы программы: пустая или с текущими значениями. */
+    public record ProgramRow(int index, Long exerciseId, Integer sets, Integer reps, String note) {
+    }
 
     @GetMapping
     public String users(@RequestParam(defaultValue = "0") int page, Model model) {
@@ -80,7 +89,7 @@ public class SpecialistPageController {
     public String newProgram(@PathVariable Long id, Model model) {
         model.addAttribute("userId", id);
         model.addAttribute("exercises", exerciseService.search(null, null, 0, 100).content());
-        model.addAttribute("rows", java.util.stream.IntStream.rangeClosed(1, PROGRAM_ROWS).boxed().toList());
+        model.addAttribute("rows", emptyRows());
         return "specialist/program-new";
     }
 
@@ -91,19 +100,7 @@ public class SpecialistPageController {
                                 @RequestParam(required = false) String priorities,
                                 @RequestParam Map<String, String> form) {
 
-        List<ProgramItemRequest> items = new ArrayList<>();
-        for (int row = 1; row <= PROGRAM_ROWS; row++) {
-            String exerciseId = form.get("exerciseId" + row);
-            if (exerciseId == null || exerciseId.isBlank()) {
-                continue;
-            }
-            items.add(new ProgramItemRequest(
-                    Long.valueOf(exerciseId),
-                    parseInteger(form.get("sets" + row)),
-                    parseInteger(form.get("reps" + row)),
-                    blankToNull(form.get("note" + row))));
-        }
-
+        List<ProgramItemRequest> items = parseItems(form);
         if (items.isEmpty()) {
             return "redirect:/specialist/users/" + id + "/programs/new?empty";
         }
@@ -115,6 +112,40 @@ public class SpecialistPageController {
         } catch (RuntimeException ex) {
             log.warn("Не удалось создать программу для {}: {}", id, ex.getMessage());
             return "redirect:/specialist/users/" + id + "/programs/new?error";
+        }
+    }
+
+    @GetMapping("/programs/{id}/edit")
+    public String editProgram(@PathVariable Long id, Model model) {
+        ProgramResponse program = programService.getForSpecialist(id);
+
+        model.addAttribute("program", program);
+        model.addAttribute("exercises", exerciseService.search(null, null, 0, 100).content());
+        model.addAttribute("rows", rowsFromProgram(program));
+        model.addAttribute("prioritiesText", program.priorities() == null
+                ? "" : String.join("\n", program.priorities()));
+        return "specialist/program-edit";
+    }
+
+    @PostMapping("/programs/{id}")
+    public String updateProgram(@PathVariable Long id,
+                                @RequestParam String title,
+                                @RequestParam(required = false) String comment,
+                                @RequestParam(required = false) String priorities,
+                                @RequestParam Map<String, String> form) {
+
+        List<ProgramItemRequest> items = parseItems(form);
+        if (items.isEmpty()) {
+            return "redirect:/specialist/programs/" + id + "/edit?empty";
+        }
+
+        try {
+            programService.update(id, new ProgramUpdateRequest(
+                    title.trim(), blankToNull(comment), lines(priorities), items));
+            return "redirect:/specialist/programs/" + id;
+        } catch (RuntimeException ex) {
+            log.warn("Не удалось обновить программу {}: {}", id, ex.getMessage());
+            return "redirect:/specialist/programs/" + id + "/edit?error";
         }
     }
 
@@ -149,6 +180,46 @@ public class SpecialistPageController {
             return "redirect:/specialist/exercises?error";
         }
         return "redirect:/specialist/exercises";
+    }
+
+    private List<ProgramRow> emptyRows() {
+        List<ProgramRow> rows = new ArrayList<>();
+        for (int i = 1; i <= VISIBLE_ROWS; i++) {
+            rows.add(new ProgramRow(i, null, null, null, null));
+        }
+        return rows;
+    }
+
+    private List<ProgramRow> rowsFromProgram(ProgramResponse program) {
+        List<ProgramItemResponse> items = program.items();
+        int size = Math.max(VISIBLE_ROWS, items.size());
+
+        List<ProgramRow> rows = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            if (i < items.size()) {
+                ProgramItemResponse item = items.get(i);
+                rows.add(new ProgramRow(i + 1, item.exerciseId(), item.sets(), item.reps(), item.note()));
+            } else {
+                rows.add(new ProgramRow(i + 1, null, null, null, null));
+            }
+        }
+        return rows;
+    }
+
+    private List<ProgramItemRequest> parseItems(Map<String, String> form) {
+        List<ProgramItemRequest> items = new ArrayList<>();
+        for (int row = 1; row <= MAX_ROWS; row++) {
+            String exerciseId = form.get("exerciseId" + row);
+            if (exerciseId == null || exerciseId.isBlank()) {
+                continue;
+            }
+            items.add(new ProgramItemRequest(
+                    Long.valueOf(exerciseId),
+                    parseInteger(form.get("sets" + row)),
+                    parseInteger(form.get("reps" + row)),
+                    blankToNull(form.get("note" + row))));
+        }
+        return items;
     }
 
     private Integer parseInteger(String value) {

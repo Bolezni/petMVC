@@ -24,6 +24,10 @@
         <li th:if="${program.status.name() == 'COMPLETED'}">Завершена</li>
     </ul>
 
+    <div class="actions-inline">
+        <a class="btn btn-sm" th:href="@{/specialist/programs/{id}/edit(id=${program.id})}">Редактировать программу</a>
+    </div>
+
     <section class="card" th:if="${program.specialistComment != null and !program.specialistComment.isBlank()}">
         <h2>Комментарий</h2>
         <p th:text="${program.specialistComment}"></p>
@@ -43,9 +47,9 @@
                 <div class="grow">
                     <div th:text="${item.exerciseName}"></div>
                     <div class="muted small">
-                        <span th:if="${item.sets != null}"
-                              th:text="${item.sets + ' × ' + item.reps + ' · '}"></span>
-                        <span th:text="${item.muscleGroup}"></span>
+                        <span th:text="${(item.sets != null ? item.sets : 3) + ' × ' + (item.reps != null ? item.reps : 12)}"></span>
+                        <span th:if="${item.muscleGroup != null}"
+                              th:text="${' · ' + item.muscleGroup}"></span>
                     </div>
                     <div class="muted small" th:if="${item.note != null}" th:text="${item.note}"></div>
                 </div>

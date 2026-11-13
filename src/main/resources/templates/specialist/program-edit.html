@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
+    <title>Редактирование программы — petMVP</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232563eb'/%3E%3C/svg%3E">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments :: topbar}"></div>
+
+<main class="container">
+    <a class="back" th:href="@{/specialist/programs/{id}(id=${program.id})}">← К программе</a>
+
+    <h1>Редактирование программы</h1>
+    <p class="muted">Состав упражнений заменяется целиком. Пустые строки игнорируются.</p>
+
+    <div class="alert alert-error" th:if="${param.empty}">
+        Не выбрано ни одного упражнения.
+    </div>
+    <div class="alert alert-error" th:if="${param.error}">
+        Не удалось сохранить программу. Проверьте поля и попробуйте снова.
+    </div>
+
+    <form method="post" th:action="@{/specialist/programs/{id}(id=${program.id})}" class="form">
+
+        <fieldset class="card">
+            <legend>Описание</legend>
+
+            <label class="field">
+                <span class="field-label">Название программы</span>
+                <input type="text" name="title" required maxlength="255"
+                       th:value="${program.title}">
+            </label>
+
+            <label class="field">
+                <span class="field-label">Комментарий пользователю</span>
+                <textarea name="comment" rows="3" th:text="${program.specialistComment}"></textarea>
+            </label>
+
+            <label class="field">
+                <span class="field-label">Приоритеты</span>
+                <textarea name="priorities" rows="3" th:text="${prioritiesText}"></textarea>
+                <span class="hint">Каждый пункт — с новой строки.</span>
+            </label>
+        </fieldset>
+
+        <fieldset class="card">
+            <legend>Упражнения</legend>
+
+            <p class="hint">
+                Подходы и повторения по умолчанию — 3 и 12, если оставить поле пустым.
+            </p>
+
+            <div class="row-grid row-head">
+                <span>Упражнение</span>
+                <span>Подходы</span>
+                <span>Повторы</span>
+                <span>Заметка</span>
+            </div>
+
+            <div class="row-grid" th:each="r : ${rows}">
+                <select th:name="${'exerciseId' + r.index}">
+                    <option value="">— не выбрано —</option>
+                    <option th:each="ex : ${exercises}" th:value="${ex.id}"
+                            th:selected="${r.exerciseId != null and ex.id == r.exerciseId}"
+                            th:text="${ex.name + ' · ' + ex.muscleGroup}"></option>
+                </select>
+                <input type="number" th:name="${'sets' + r.index}" th:value="${r.sets}"
+                       min="1" max="100" placeholder="3">
+                <input type="number" th:name="${'reps' + r.index}" th:value="${r.reps}"
+                       min="1" max="1000" placeholder="12">
+                <input type="text" th:name="${'note' + r.index}" th:value="${r.note}"
+                       maxlength="1000" placeholder="Медленно">
+            </div>
+        </fieldset>
+
+        <button class="btn btn-primary btn-block" type="submit">Сохранить изменения</button>
+    </form>
+</main>
+
+</body>
+</html>

@@ -4,6 +4,7 @@ import com.example.demo.api.dto.ProgramCreateRequest;
 import com.example.demo.api.dto.ProgramResponse;
 import com.example.demo.api.dto.ProgramStatusRequest;
 import com.example.demo.api.dto.ProgramSummaryResponse;
+import com.example.demo.api.dto.ProgramUpdateRequest;
 import com.example.demo.api.service.program.ProgramService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,13 @@ public class ProgramController {
     @ResponseStatus(HttpStatus.CREATED)
     public ProgramResponse create(@Valid @RequestBody ProgramCreateRequest request) {
         return programService.create(request);
+    }
+
+    /** Полное обновление программы: состав упражнений заменяется целиком. */
+    @PutMapping("/specialist/programs/{id}")
+    public ProgramResponse update(@PathVariable Long id,
+                                  @Valid @RequestBody ProgramUpdateRequest request) {
+        return programService.update(id, request);
     }
 
     @GetMapping("/specialist/programs/{id}")

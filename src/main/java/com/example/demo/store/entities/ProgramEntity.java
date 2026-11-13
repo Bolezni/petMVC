@@ -21,6 +21,10 @@ import java.util.List;
 })
 public class ProgramEntity extends BaseEntity {
 
+    /** Значения по умолчанию, если специалист не указал нагрузку. */
+    public static final int DEFAULT_SETS = 3;
+    public static final int DEFAULT_REPS = 12;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -56,8 +60,9 @@ public class ProgramEntity extends BaseEntity {
         ProgramItemEntity item = new ProgramItemEntity();
         item.setProgram(this);
         item.setExercise(exercise);
-        item.setSets(sets);
-        item.setReps(reps);
+        // незаполненная нагрузка не должна превращаться в null на странице
+        item.setSets(sets == null ? DEFAULT_SETS : sets);
+        item.setReps(reps == null ? DEFAULT_REPS : reps);
         item.setSpecialistNote(note);
         item.setSortOrder(order);
         items.add(item);
