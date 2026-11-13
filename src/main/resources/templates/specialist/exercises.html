@@ -17,6 +17,7 @@
     <h1>Библиотека упражнений</h1>
     <p class="muted">Из неё собираются программы.</p>
 
+    <div class="alert alert-ok" th:if="${param.created}">Упражнение добавлено в библиотеку.</div>
     <div class="alert alert-error" th:if="${param.error}">
         Не удалось сохранить упражнение. Ссылка на видео должна начинаться с https://
     </div>

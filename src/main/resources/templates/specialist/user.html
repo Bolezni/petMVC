@@ -22,12 +22,8 @@
     <section class="card">
         <div class="section-title">
             <h2>Анкета</h2>
-            <div class="row-actions">
-                <span class="badge badge-done" th:if="${questionnaire != null}">Заполнена</span>
-                <span class="badge" th:if="${questionnaire == null}">Нет</span>
-                <a class="btn btn-sm" th:href="@{/specialist/users/{id}/questionnaire(id=${userId})}"
-                   th:text="${questionnaire != null ? 'Новая анкета' : 'Заполнить анкету'}"></a>
-            </div>
+            <span class="badge badge-done" th:if="${questionnaire != null}">Заполнена</span>
+            <span class="badge" th:if="${questionnaire == null}">Нет</span>
         </div>
 
         <div class="empty" th:if="${questionnaire == null}">

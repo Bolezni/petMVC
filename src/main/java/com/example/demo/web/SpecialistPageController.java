@@ -9,7 +9,6 @@ import com.example.demo.api.dto.ProgramItemRequest;
 import com.example.demo.api.dto.ProgramItemResponse;
 import com.example.demo.api.dto.ProgramResponse;
 import com.example.demo.api.dto.ProgramUpdateRequest;
-import com.example.demo.api.dto.QuestionnaireCreateDto;
 import com.example.demo.api.dto.QuestionnaireResponseDto;
 import com.example.demo.api.dto.UserListItemDto;
 import com.example.demo.api.exception.exeptions.NotFoundException;
@@ -84,30 +83,6 @@ public class SpecialistPageController {
         model.addAttribute("media", mediaService.getByUser(id));
         model.addAttribute("programs", programService.listByUser(id));
         return "specialist/user";
-    }
-
-    // ---------- анкета за пользователя ----------
-
-    @GetMapping("/users/{id}/questionnaire")
-    public String questionnaireForm(@PathVariable Long id, Model model) {
-        model.addAttribute("userId", id);
-        return "specialist/questionnaire-new";
-    }
-
-    @PostMapping("/users/{id}/questionnaire")
-    public String createQuestionnaire(@PathVariable Long id,
-                                      @RequestParam String request,
-                                      @RequestParam(required = false) String goals,
-                                      @RequestParam(required = false) String wellbeing,
-                                      @RequestParam(required = false) String restrictions) {
-        try {
-            questionnaireService.createQuestionnaireForUser(id, new QuestionnaireCreateDto(
-                    1, request.trim(), lines(goals), blankToNull(wellbeing), lines(restrictions), null));
-        } catch (RuntimeException ex) {
-            log.warn("Не удалось сохранить анкету для {}: {}", id, ex.getMessage());
-            return "redirect:/specialist/users/" + id + "/questionnaire?error";
-        }
-        return "redirect:/specialist/users/" + id;
     }
 
     // ---------- программы ----------
@@ -224,7 +199,7 @@ public class SpecialistPageController {
             log.warn("Не удалось создать упражнение: {}", ex.getMessage());
             return "redirect:/specialist/exercises?error";
         }
-        return "redirect:/specialist/exercises";
+        return "redirect:/specialist/exercises?created";
     }
 
     @GetMapping("/exercises/{id}/edit")
