@@ -37,6 +37,7 @@ Caddy сам получит сертификат Let's Encrypt, когда DNS �
 | `JWT_SECRET` | да | base64, минимум 32 байта |
 | `ADMIN_KEY` | да | Ключ `X-Admin-Key` для создания специалистов |
 | `DOMAIN` | да | Домен для Caddy и HTTPS |
+| `CORS_ALLOWED_ORIGINS` | нет | Origins для отдельного фронтенда, через запятую |
 | `STORAGE_PATH` | нет | Каталог медиа внутри контейнера |
 | `SQL_DEBUG` | нет | `true` для логов SQL, на проде `false` |
 | `SECURITY_LOG_LEVEL` | нет | Уровень логов Spring Security, на проде `INFO` |
@@ -47,7 +48,7 @@ Caddy сам получит сертификат Let's Encrypt, когда DNS �
 curl -X POST https://<домен>/api/v1/admin/specialists \
   -H "Content-Type: application/json" \
   -H "X-Admin-Key: $ADMIN_KEY" \
-  -d '{"email":"spec@example.com","password":"StrongPass123","passwordRepeat":"StrongPass123","phone":"+79990000000","name":"Имя","gender":"MALE"}'
+  -d '{"email":"spec@example.com","password":"StrongPass123","passwordRepeat":"StrongPass123","phone":"+79990000000","name":"Имя","gender":"MAN"}'
 ```
 
 ## 5. Бэкапы
@@ -72,9 +73,34 @@ git pull
 docker compose up -d --build
 ```
 
-## 7. Что не настроено сознательно
+## 7. Отдельный фронтенд (CORS)
 
-- Нет rate-limit на `/api/v1/auth/login` — добавить на этапе публичного запуска.
+По умолчанию фронтенда отдельно нет: страницы и API на одном домене, CORS выключен.
+
+Если фронтенд выносится на свой домен:
+
+```bash
+# .env
+CORS_ALLOWED_ORIGINS=https://app.example.com
+docker compose up -d
+```
+
+Правила, которые уже заложены в коде:
+
+- CORS открыт только для `/api/**`, страницы MVC не экспонируются;
+- `Allow-Credentials: true`, поэтому `*` в списке origins не используется —
+  при wildcard включаются `allowedOriginPatterns`;
+- разрешены методы `GET, POST, PUT, PATCH, DELETE, OPTIONS` и заголовки
+  `Authorization`, `Content-Type`, `Accept`, `Origin`, `X-Admin-Key`;
+- preflight обрабатывается до авторизации, поэтому OPTIONS не требует токена.
+
+Если фронтенд на поддомене того же домена (`app.example.com` + `api.example.com`),
+cookie продолжат работать при `SameSite=Lax`. Если домены разные — потребуется
+`SameSite=None; Secure`, а это уже хрупко из-за блокировки сторонних cookie;
+в таком случае надёжнее перейти на bearer-токены.
+
+## 8. Что не настроено сознательно
+
+- Нет горизонтального масштабирования: один инстанс приложения.
 - Медиа хранится на диске сервера, а не в S3 — для пилота достаточно,
   при переезде меняется только `FileStorage` (интерфейс уже выделен).
-- Нет горизонтального масштабирования: один инстанс приложения.

@@ -41,6 +41,10 @@ app:
   storage:
     path: ${STORAGE_PATH:./uploads}
   admin-key: ${ADMIN_KEY:}
+  cors:
+    # Пусто = CORS выключен, страницы и API на одном origin.
+    # Для отдельного фронтенда: https://app.example.com или список через запятую.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
 
 management:
   endpoints:
