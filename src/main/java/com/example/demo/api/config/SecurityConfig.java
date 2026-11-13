@@ -37,6 +37,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         // страницы входа и статика доступны без токена
                         .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/favicon.ico").permitAll()
+                        // создание специалиста защищено ключом X-Admin-Key, а не сессией
+                        .requestMatchers("/admin", "/admin/**").permitAll()
                         .requestMatchers("/api/v1/specialist/**").hasAuthority(Roles.SPECIALIST.name())
                         .requestMatchers("/specialist/**").hasAuthority(Roles.SPECIALIST.name())
                         .requestMatchers("/api/v1/user/**").hasAuthority(Roles.USER.name())

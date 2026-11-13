@@ -51,6 +51,7 @@
                 <p class="muted" th:if="${item.description != null and !item.description.isBlank()}"
                    th:text="${item.description}"></p>
             </div>
+            <span class="badge badge-done" th:if="${completedItemIds.contains(item.id)}">Выполнено</span>
         </div>
 
         <ul class="chips">
@@ -82,6 +83,24 @@
             </form>
         </details>
     </article>
+
+    <section class="card" th:if="${!#lists.isEmpty(completions.content)}">
+        <div class="section-title">
+            <h2>Ваши отметки</h2>
+            <span class="badge" th:text="${completions.totalElements + ' шт.'}"></span>
+        </div>
+
+        <ul class="list">
+            <li th:each="c : ${completions.content}">
+                <div class="grow">
+                    <div th:text="${c.exerciseName}"></div>
+                    <div class="muted small" th:if="${c.feedback != null}"
+                         th:text="${'«' + c.feedback + '»'}"></div>
+                </div>
+                <span class="badge" th:text="${c.completedAt}"></span>
+            </li>
+        </ul>
+    </section>
 </main>
 
 </body>

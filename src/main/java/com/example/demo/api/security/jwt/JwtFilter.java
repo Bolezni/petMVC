@@ -1,5 +1,6 @@
 package com.example.demo.api.security.jwt;
 
+import com.example.demo.api.security.AuthCookies;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -29,6 +30,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final AuthCookies authCookies;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
@@ -40,37 +42,76 @@ public class JwtFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
+        if (SecurityContextHolder.getContext().getAuthentication() != null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String token = resolveToken(request);
 
-        if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+        if (token != null) {
             try {
-                // refresh-токен живёт дольше и не должен давать доступ к API
-                if (!jwtUtil.isAccessToken(token)) {
-                    log.warn("Отклонён токен типа {} в Authorization", jwtUtil.tokenType(token));
-                    filterChain.doFilter(request, response);
-                    return;
-                }
-
-                String email = jwtUtil.usernameFromToken(token);
-
-                if (email != null) {
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(email);
-
-                    if (jwtUtil.isTokenValidate(token, userDetails)) {
-                        UsernamePasswordAuthenticationToken authentication =
-                                new UsernamePasswordAuthenticationToken(
-                                        userDetails, null, userDetails.getAuthorities());
-                        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                        SecurityContextHolder.getContext().setAuthentication(authentication);
-                    }
-                }
+                authenticate(token, request);
             } catch (Exception ex) {
-                log.warn("JWT отклонён: {}", ex.getMessage());
+                log.debug("Access-токен не принят: {}", ex.getMessage());
                 SecurityContextHolder.clearContext();
+
+                // протух access — пробуем обновить его по refresh-cookie без разлогина
+                refreshSilently(request, response);
             }
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private void authenticate(String token, HttpServletRequest request) {
+        if (!jwtUtil.isAccessToken(token)) {
+            throw new IllegalStateException("Ожидался access-токен");
+        }
+
+        String email = jwtUtil.usernameFromToken(token);
+        if (email == null) {
+            return;
+        }
+
+        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        if (!jwtUtil.isTokenValidate(token, userDetails)) {
+            return;
+        }
+
+        UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
+    private void refreshSilently(HttpServletRequest request, HttpServletResponse response) {
+        String refreshToken = readCookie(request, AuthCookies.REFRESH_COOKIE);
+        if (refreshToken == null) {
+            return;
+        }
+
+        try {
+            if (!jwtUtil.isRefreshToken(refreshToken)) {
+                return;
+            }
+
+            String email = jwtUtil.usernameFromToken(refreshToken);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+            String newAccessToken = jwtUtil.buildJwtToken(userDetails);
+            authCookies.writeAccess(response, newAccessToken);
+
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+
+            log.debug("Access-токен обновлён по refresh-cookie");
+        } catch (Exception ex) {
+            log.debug("Обновить токен не удалось: {}", ex.getMessage());
+        }
     }
 
     /**
@@ -81,13 +122,17 @@ public class JwtFilter extends OncePerRequestFilter {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);
         }
+        return readCookie(request, ACCESS_COOKIE);
+    }
 
+    private String readCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (ACCESS_COOKIE.equals(cookie.getName())) {
-                    return cookie.getValue();
-                }
+        if (cookies == null) {
+            return null;
+        }
+        for (Cookie cookie : cookies) {
+            if (name.equals(cookie.getName())) {
+                return cookie.getValue();
             }
         }
         return null;

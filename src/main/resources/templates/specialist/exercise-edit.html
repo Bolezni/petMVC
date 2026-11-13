@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
+    <title>Упражнение — petMVP</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232563eb'/%3E%3C/svg%3E">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments :: topbar}"></div>
+
+<main class="container">
+    <a class="back" th:href="@{/specialist/exercises}">← В библиотеку</a>
+
+    <h1>Редактирование упражнения</h1>
+
+    <div class="alert alert-error" th:if="${param.error}">
+        Не удалось сохранить. Ссылка на видео должна начинаться с https://
+    </div>
+
+    <form method="post" th:action="@{/specialist/exercises/{id}(id=${exercise.id})}" class="card form">
+        <label class="field">
+            <span class="field-label">Название</span>
+            <input type="text" name="name" required maxlength="255" th:value="${exercise.name}">
+        </label>
+
+        <label class="field">
+            <span class="field-label">Описание</span>
+            <textarea name="description" rows="3" maxlength="5000" th:text="${exercise.description}"></textarea>
+        </label>
+
+        <label class="field">
+            <span class="field-label">Группа мышц</span>
+            <input type="text" name="muscleGroup" required maxlength="100" th:value="${exercise.muscleGroup}">
+        </label>
+
+        <label class="field">
+            <span class="field-label">Сложность</span>
+            <select name="difficulty">
+                <option value="">Не указана</option>
+                <option th:each="d : ${difficulties}" th:value="${d}"
+                        th:selected="${exercise.difficulty != null and exercise.difficulty.name() == d.name()}"
+                        th:text="${d.name() == 'BEGINNER' ? 'Начальный' : (d.name() == 'INTERMEDIATE' ? 'Средний' : 'Продвинутый')}"></option>
+            </select>
+        </label>
+
+        <label class="field">
+            <span class="field-label">Ссылка на видео</span>
+            <input type="url" name="videoUrl" maxlength="512" th:value="${exercise.videoUrl}"
+                   placeholder="https://www.youtube.com/watch?v=...">
+        </label>
+
+        <button class="btn btn-primary btn-block" type="submit">Сохранить</button>
+    </form>
+
+    <form method="post" th:action="@{/specialist/exercises/{id}/deactivate(id=${exercise.id})}">
+        <button class="btn btn-block" type="submit">Убрать из библиотеки</button>
+    </form>
+</main>
+
+</body>
+</html>

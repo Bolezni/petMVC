@@ -2,6 +2,7 @@ package com.example.demo.web;
 
 import com.example.demo.api.dto.CompletionResponse;
 import com.example.demo.api.dto.MediaResponseDto;
+import com.example.demo.api.dto.PageResponse;
 import com.example.demo.api.dto.ProgramResponse;
 import com.example.demo.api.dto.ProgramSummaryResponse;
 import com.example.demo.api.dto.QuestionnaireCreateDto;
@@ -24,6 +25,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/app")
@@ -94,7 +97,15 @@ public class AppController {
     @GetMapping("/programs/{id}")
     public String program(@PathVariable Long id, Model model) {
         ProgramResponse program = programService.getMine(id);
+        PageResponse<CompletionResponse> completions = completionService.listMine(id, 0, 50);
+
+        Set<Long> completedItemIds = completions.content().stream()
+                .map(CompletionResponse::programItemId)
+                .collect(Collectors.toSet());
+
         model.addAttribute("program", program);
+        model.addAttribute("completions", completions);
+        model.addAttribute("completedItemIds", completedItemIds);
         return "app/program";
     }
 

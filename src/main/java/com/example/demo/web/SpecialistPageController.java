@@ -8,8 +8,8 @@ import com.example.demo.api.dto.ProgramCreateRequest;
 import com.example.demo.api.dto.ProgramItemRequest;
 import com.example.demo.api.dto.ProgramItemResponse;
 import com.example.demo.api.dto.ProgramResponse;
-import com.example.demo.api.dto.ProgramSummaryResponse;
 import com.example.demo.api.dto.ProgramUpdateRequest;
+import com.example.demo.api.dto.QuestionnaireCreateDto;
 import com.example.demo.api.dto.QuestionnaireResponseDto;
 import com.example.demo.api.dto.UserListItemDto;
 import com.example.demo.api.exception.exeptions.NotFoundException;
@@ -19,6 +19,7 @@ import com.example.demo.api.service.media.MediaService;
 import com.example.demo.api.service.program.ProgramService;
 import com.example.demo.api.service.questionnaire.QuestionnaireService;
 import com.example.demo.store.entities.Difficulty;
+import com.example.demo.store.entities.ProgramStatus;
 import com.example.demo.store.entities.UserEntity;
 import com.example.demo.store.repo.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -85,6 +86,32 @@ public class SpecialistPageController {
         return "specialist/user";
     }
 
+    // ---------- анкета за пользователя ----------
+
+    @GetMapping("/users/{id}/questionnaire")
+    public String questionnaireForm(@PathVariable Long id, Model model) {
+        model.addAttribute("userId", id);
+        return "specialist/questionnaire-new";
+    }
+
+    @PostMapping("/users/{id}/questionnaire")
+    public String createQuestionnaire(@PathVariable Long id,
+                                      @RequestParam String request,
+                                      @RequestParam(required = false) String goals,
+                                      @RequestParam(required = false) String wellbeing,
+                                      @RequestParam(required = false) String restrictions) {
+        try {
+            questionnaireService.createQuestionnaireForUser(id, new QuestionnaireCreateDto(
+                    1, request.trim(), lines(goals), blankToNull(wellbeing), lines(restrictions), null));
+        } catch (RuntimeException ex) {
+            log.warn("Не удалось сохранить анкету для {}: {}", id, ex.getMessage());
+            return "redirect:/specialist/users/" + id + "/questionnaire?error";
+        }
+        return "redirect:/specialist/users/" + id;
+    }
+
+    // ---------- программы ----------
+
     @GetMapping("/users/{id}/programs/new")
     public String newProgram(@PathVariable Long id, Model model) {
         model.addAttribute("userId", id);
@@ -149,6 +176,13 @@ public class SpecialistPageController {
         }
     }
 
+    /** Единственный способ перевести программу в «завершена» или «в архиве». */
+    @PostMapping("/programs/{id}/status")
+    public String changeStatus(@PathVariable Long id, @RequestParam ProgramStatus status) {
+        programService.changeStatus(id, status);
+        return "redirect:/specialist/programs/" + id;
+    }
+
     @GetMapping("/programs/{id}")
     public String program(@PathVariable Long id, Model model) {
         ProgramResponse program = programService.getForSpecialist(id);
@@ -156,12 +190,23 @@ public class SpecialistPageController {
 
         model.addAttribute("program", program);
         model.addAttribute("completions", completions);
+        model.addAttribute("statuses", ProgramStatus.values());
         return "specialist/program";
     }
 
+    // ---------- библиотека упражнений ----------
+
     @GetMapping("/exercises")
-    public String exercises(Model model) {
-        model.addAttribute("exercises", exerciseService.search(null, null, 0, 100).content());
+    public String exercises(@RequestParam(required = false) String q,
+                            @RequestParam(required = false) String muscleGroup,
+                            Model model) {
+        PageResponse<ExerciseResponse> page = exerciseService.search(
+                blankToNull(q), blankToNull(muscleGroup), 0, 100);
+
+        model.addAttribute("exercises", page.content());
+        model.addAttribute("total", page.totalElements());
+        model.addAttribute("q", q);
+        model.addAttribute("muscleGroup", muscleGroup);
         model.addAttribute("difficulties", Difficulty.values());
         return "specialist/exercises";
     }
@@ -181,6 +226,40 @@ public class SpecialistPageController {
         }
         return "redirect:/specialist/exercises";
     }
+
+    @GetMapping("/exercises/{id}/edit")
+    public String editExercise(@PathVariable Long id, Model model) {
+        ExerciseResponse exercise = exerciseService.get(id);
+
+        model.addAttribute("exercise", exercise);
+        model.addAttribute("difficulties", Difficulty.values());
+        return "specialist/exercise-edit";
+    }
+
+    @PostMapping("/exercises/{id}")
+    public String updateExercise(@PathVariable Long id,
+                                 @RequestParam String name,
+                                 @RequestParam(required = false) String description,
+                                 @RequestParam String muscleGroup,
+                                 @RequestParam(required = false) Difficulty difficulty,
+                                 @RequestParam(required = false) String videoUrl) {
+        try {
+            exerciseService.update(id, new ExerciseRequest(name.trim(), blankToNull(description),
+                    muscleGroup.trim(), difficulty, blankToNull(videoUrl)));
+        } catch (RuntimeException ex) {
+            log.warn("Не удалось обновить упражнение {}: {}", id, ex.getMessage());
+            return "redirect:/specialist/exercises/" + id + "/edit?error";
+        }
+        return "redirect:/specialist/exercises";
+    }
+
+    @PostMapping("/exercises/{id}/deactivate")
+    public String deactivateExercise(@PathVariable Long id) {
+        exerciseService.deactivate(id);
+        return "redirect:/specialist/exercises";
+    }
+
+    // ---------- вспомогательное ----------
 
     private List<ProgramRow> emptyRows() {
         List<ProgramRow> rows = new ArrayList<>();

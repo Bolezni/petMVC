@@ -46,4 +46,17 @@ class WebSecurityTest {
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void adminPage_isPublicBecauseProtectedByKey() throws Exception {
+        mockMvc.perform(get("/admin/specialists"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void exercisesPage_requiresLogin() throws Exception {
+        mockMvc.perform(get("/specialist/exercises"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
 }

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#ffffff">
+    <title>Новый специалист — petMVP</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%232563eb'/%3E%3C/svg%3E">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <link rel="stylesheet" th:href="@{/css/components.css}">
+</head>
+<body>
+
+<main class="container">
+    <h1>Новый специалист</h1>
+    <p class="muted">
+        Служебная страница. Нужен ключ <code>ADMIN_KEY</code> из окружения —
+        тот же, что для <code>POST /api/v1/admin/specialists</code>.
+    </p>
+
+    <div class="alert alert-ok" th:if="${param.created}">Специалист создан.</div>
+    <div class="alert alert-error" th:if="${param.error == 'key'}">Неверный ключ.</div>
+    <div class="alert alert-error" th:if="${param.error == 'data'}">
+        Не удалось создать: возможно, такой email или телефон уже занят.
+    </div>
+    <div class="alert alert-error" th:if="${!adminKeyRequired}">
+        ADMIN_KEY не задан в окружении — создание специалистов отключено.
+    </div>
+
+    <form method="post" th:action="@{/admin/specialists}" class="card form">
+        <label class="field">
+            <span class="field-label">Ключ администратора</span>
+            <input type="password" name="key" required autocomplete="off">
+        </label>
+
+        <label class="field">
+            <span class="field-label">Email</span>
+            <input type="email" name="email" required autocomplete="off">
+        </label>
+
+        <label class="field">
+            <span class="field-label">Пароль</span>
+            <input type="password" name="password" required minlength="6" autocomplete="new-password">
+        </label>
+
+        <label class="field">
+            <span class="field-label">Пароль ещё раз</span>
+            <input type="password" name="passwordRepeat" required minlength="6" autocomplete="new-password">
+        </label>
+
+        <label class="field">
+            <span class="field-label">Телефон</span>
+            <input type="tel" name="phone" required placeholder="+79991234567" pattern="\+7\d{10}">
+        </label>
+
+        <label class="field">
+            <span class="field-label">Имя</span>
+            <input type="text" name="name" maxlength="100">
+        </label>
+
+        <label class="field">
+            <span class="field-label">Пол</span>
+            <select name="gender" required>
+                <option th:each="g : ${genders}" th:value="${g}"
+                        th:text="${g.name() == 'MAN' ? 'Мужской' : 'Женский'}"></option>
+            </select>
+        </label>
+
+        <button class="btn btn-primary btn-block" type="submit">Создать специалиста</button>
+    </form>
+
+    <p class="muted"><a th:href="@{/login}">Перейти ко входу</a></p>
+</main>
+
+</body>
+</html>

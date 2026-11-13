@@ -4,6 +4,7 @@ import com.example.demo.api.dto.AuthenticationRequest;
 import com.example.demo.api.dto.AuthenticationResponse;
 import com.example.demo.api.dto.RegisterRequest;
 import com.example.demo.api.exception.exeptions.ConflictException;
+import com.example.demo.api.security.AuthCookies;
 import com.example.demo.api.service.authentication.AuthenticationService;
 import com.example.demo.api.service.authentication.RegisterService;
 import com.example.demo.store.entities.Gender;

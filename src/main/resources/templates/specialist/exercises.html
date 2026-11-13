@@ -64,22 +64,40 @@
     <section class="card">
         <div class="section-title">
             <h2>В библиотеке</h2>
-            <span class="badge" th:if="${!#lists.isEmpty(exercises)}"
-                  th:text="${#lists.size(exercises) + ' шт.'}"></span>
+            <span class="badge" th:text="${total + ' шт.'}"></span>
         </div>
 
+        <form method="get" th:action="@{/specialist/exercises}" class="search-form">
+            <input type="search" name="q" th:value="${q}" placeholder="Поиск по названию">
+            <input type="text" name="muscleGroup" th:value="${muscleGroup}" placeholder="Группа мышц">
+            <button class="btn btn-sm" type="submit">Найти</button>
+            <a class="btn btn-sm" th:if="${q != null or muscleGroup != null}"
+               th:href="@{/specialist/exercises}">Сбросить</a>
+        </form>
+
         <div class="empty" th:if="${#lists.isEmpty(exercises)}">
-            <div>Пока пусто. Добавьте первые упражнения.</div>
+            <div th:text="${q != null or muscleGroup != null ? 'Ничего не найдено по фильтру.' : 'Пока пусто. Добавьте первые упражнения.'}"></div>
         </div>
 
         <ul class="list" th:if="${!#lists.isEmpty(exercises)}">
             <li th:each="ex : ${exercises}">
                 <div class="grow">
                     <div th:text="${ex.name}"></div>
-                    <div class="muted small" th:text="${ex.muscleGroup}"></div>
+                    <div class="muted small">
+                        <span th:text="${ex.muscleGroup}"></span>
+                        <span th:if="${ex.difficulty != null}"
+                              th:text="${' · ' + (ex.difficulty.name() == 'BEGINNER' ? 'начальный' : (ex.difficulty.name() == 'INTERMEDIATE' ? 'средний' : 'продвинутый'))}"></span>
+                    </div>
                 </div>
-                <a class="badge" th:if="${ex.videoUrl != null}" th:href="${ex.videoUrl}"
-                   target="_blank" rel="noopener">видео</a>
+
+                <div class="row-actions">
+                    <a class="badge" th:if="${ex.videoUrl != null}" th:href="${ex.videoUrl}"
+                       target="_blank" rel="noopener">видео</a>
+                    <a class="btn btn-sm" th:href="@{/specialist/exercises/{id}/edit(id=${ex.id})}">Изменить</a>
+                    <form method="post" th:action="@{/specialist/exercises/{id}/deactivate(id=${ex.id})}">
+                        <button class="btn btn-sm" type="submit">Убрать</button>
+                    </form>
+                </div>
             </li>
         </ul>
     </section>

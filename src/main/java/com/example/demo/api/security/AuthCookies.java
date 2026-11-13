@@ -1,4 +1,4 @@
-package com.example.demo.web;
+package com.example.demo.api.security;
 
 import com.example.demo.api.dto.AuthenticationResponse;
 import com.example.demo.api.security.jwt.JwtFilter;
@@ -13,6 +13,10 @@ import java.time.Duration;
 /**
  * Кладёт пару токенов в httpOnly-cookie, чтобы страницы работали без JavaScript.
  * SameSite=Lax защищает от межсайтовых POST при отключённом CSRF.
+ *
+ * Cookie с access-токеном живёт столько же, сколько refresh: сам токен всё равно
+ * проверяется по сроку, а долгоживущая cookie нужна, чтобы JwtFilter мог
+ * незаметно обновить протухший access по refresh-токену.
  */
 @Component
 public class AuthCookies {
@@ -29,8 +33,13 @@ public class AuthCookies {
     }
 
     public void write(HttpServletResponse response, AuthenticationResponse tokens) {
-        add(response, JwtFilter.ACCESS_COOKIE, tokens.token(), accessTtlMs);
+        add(response, JwtFilter.ACCESS_COOKIE, tokens.token(), refreshTtlMs);
         add(response, REFRESH_COOKIE, tokens.refreshToken(), refreshTtlMs);
+    }
+
+    /** Обновление одного access-токена без выхода из аккаунта. */
+    public void writeAccess(HttpServletResponse response, String token) {
+        add(response, JwtFilter.ACCESS_COOKIE, token, refreshTtlMs);
     }
 
     public void clear(HttpServletResponse response) {
