@@ -2,7 +2,6 @@ package com.example.demo.store.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.experimental.SuperBuilder;
 
 /**
  * Библиотека упражнений
@@ -34,8 +33,13 @@ public class ExerciseEntity extends BaseEntity {
     @Column(name = "difficulty")
     private Difficulty difficulty;
 
+    /** Внешняя ссылка (YouTube и т.п.). */
     @Column(name = "video_url", length = 512)
     private String videoUrl;
+
+    /** Своё видео-демонстрация, загруженное специалистом на сервер. */
+    @Column(name = "video_media_id")
+    private Long videoMediaId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by")

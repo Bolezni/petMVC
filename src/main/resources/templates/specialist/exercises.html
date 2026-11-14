@@ -15,11 +15,14 @@
 
 <main class="container">
     <h1>Библиотека упражнений</h1>
-    <p class="muted">Из неё собираются программы.</p>
+    <p class="muted">Из неё собираются программы. Видео-демонстрации хранятся на сервере.</p>
 
     <div class="alert alert-ok" th:if="${param.created}">Упражнение добавлено в библиотеку.</div>
     <div class="alert alert-error" th:if="${param.error}">
         Не удалось сохранить упражнение. Ссылка на видео должна начинаться с https://
+    </div>
+    <div class="alert alert-error" th:if="${param.videoError}">
+        Упражнение сохранено, но видео загрузить не удалось: нужен MP4 или MOV до 50 МБ.
     </div>
 
     <section class="card">
@@ -27,7 +30,7 @@
             <h2>Добавить упражнение</h2>
         </div>
 
-        <form method="post" th:action="@{/specialist/exercises}" class="form">
+        <form method="post" th:action="@{/specialist/exercises}" class="form" enctype="multipart/form-data">
             <label class="field">
                 <span class="field-label">Название</span>
                 <input type="text" name="name" required maxlength="255" placeholder="Ягодичный мостик">
@@ -53,9 +56,15 @@
             </label>
 
             <label class="field">
-                <span class="field-label">Ссылка на видео</span>
+                <span class="field-label">Видео-демонстрация</span>
+                <input type="file" name="video" accept="video/mp4,video/quicktime">
+                <span class="hint">MP4 или MOV до 50 МБ. Файл хранится на вашем сервере.</span>
+            </label>
+
+            <label class="field">
+                <span class="field-label">Или ссылка на видео</span>
                 <input type="url" name="videoUrl" maxlength="512" placeholder="https://www.youtube.com/watch?v=...">
-                <span class="hint">Необязательно, но желательно — пользователь увидит кнопку «Смотреть видео».</span>
+                <span class="hint">Необязательно. Если загрузили файл, ссылка не нужна.</span>
             </label>
 
             <button class="btn btn-primary btn-block" type="submit">Добавить в библиотеку</button>
@@ -92,8 +101,9 @@
                 </div>
 
                 <div class="row-actions">
+                    <span class="badge badge-done" th:if="${ex.videoMediaId != null}">видео на сервере</span>
                     <a class="badge" th:if="${ex.videoUrl != null}" th:href="${ex.videoUrl}"
-                       target="_blank" rel="noopener">видео</a>
+                       target="_blank" rel="noopener">видео-ссылка</a>
                     <a class="btn btn-sm" th:href="@{/specialist/exercises/{id}/edit(id=${ex.id})}">Изменить</a>
                     <form method="post" th:action="@{/specialist/exercises/{id}/deactivate(id=${ex.id})}">
                         <button class="btn btn-sm" type="submit">Убрать</button>

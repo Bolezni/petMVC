@@ -21,8 +21,22 @@
     <div class="alert alert-error" th:if="${param.error}">
         Не удалось сохранить. Ссылка на видео должна начинаться с https://
     </div>
+    <div class="alert alert-error" th:if="${param.videoError}">
+        Не удалось загрузить видео: нужен MP4 или MOV до 50 МБ.
+    </div>
 
-    <form method="post" th:action="@{/specialist/exercises/{id}(id=${exercise.id})}" class="card form">
+    <section class="card" th:if="${exercise.videoMediaId != null}">
+        <h2>Текущее видео</h2>
+        <video class="video-player" controls preload="metadata"
+               th:src="@{'/api/v1/media/{id}/content'(id=${exercise.videoMediaId})}"></video>
+        <label class="check">
+            <input type="checkbox" name="removeVideo" value="true" form="exercise-form">
+            <span>Удалить видео при сохранении</span>
+        </label>
+    </section>
+
+    <form id="exercise-form" method="post" th:action="@{/specialist/exercises/{id}(id=${exercise.id})}"
+          class="card form" enctype="multipart/form-data">
         <label class="field">
             <span class="field-label">Название</span>
             <input type="text" name="name" required maxlength="255" th:value="${exercise.name}">
@@ -49,7 +63,13 @@
         </label>
 
         <label class="field">
-            <span class="field-label">Ссылка на видео</span>
+            <span class="field-label" th:text="${exercise.videoMediaId != null ? 'Заменить видео' : 'Загрузить видео'}"></span>
+            <input type="file" name="video" accept="video/mp4,video/quicktime">
+            <span class="hint">MP4 или MOV до 50 МБ. Если видео уже есть, новый файл заменит его.</span>
+        </label>
+
+        <label class="field">
+            <span class="field-label">Или ссылка на видео</span>
             <input type="url" name="videoUrl" maxlength="512" th:value="${exercise.videoUrl}"
                    placeholder="https://www.youtube.com/watch?v=...">
         </label>

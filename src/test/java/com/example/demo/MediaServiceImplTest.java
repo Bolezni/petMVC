@@ -2,12 +2,13 @@ package com.example.demo;
 
 import com.example.demo.api.exception.exeptions.NotFoundException;
 import com.example.demo.api.security.CheckAuthUtil;
+import com.example.demo.api.service.media.FileStorage;
 import com.example.demo.api.service.media.MediaServiceImpl;
 import com.example.demo.store.entities.MediaFileEntity;
 import com.example.demo.store.entities.Roles;
 import com.example.demo.store.entities.UserEntity;
+import com.example.demo.store.repo.ExerciseRepository;
 import com.example.demo.store.repo.MediaFileRepository;
-import com.example.demo.api.service.media.FileStorage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +33,9 @@ class MediaServiceImplTest {
     private MediaFileRepository repository;
 
     @Mock
+    private ExerciseRepository exerciseRepository;
+
+    @Mock
     private FileStorage storage;
 
     @InjectMocks
@@ -45,8 +49,8 @@ class MediaServiceImplTest {
     void setUp() {
         authMock = Mockito.mockStatic(CheckAuthUtil.class);
 
-        owner = UserEntity.builder().id(1L).email("owner@example.com").role(Roles.USER).build();
-        stranger = UserEntity.builder().id(2L).email("stranger@example.com").role(Roles.USER).build();
+        owner = UserEntity.builder().id(1L).email("owner@example.com").role(Roles.SPECIALIST).build();
+        stranger = UserEntity.builder().id(2L).email("stranger@example.com").role(Roles.SPECIALIST).build();
     }
 
     @AfterEach
@@ -56,19 +60,19 @@ class MediaServiceImplTest {
 
     @Test
     void delete_removesRowAndFile() {
-        MediaFileEntity media = media(owner, "1/abc.png");
+        MediaFileEntity media = media(owner, "1/abc.mp4");
         when(repository.findById(5L)).thenReturn(Optional.of(media));
         authMock.when(CheckAuthUtil::getAuthUser).thenReturn(owner);
 
         service.delete(5L);
 
         verify(repository).delete(media);
-        verify(storage).delete("1/abc.png");
+        verify(storage).delete("1/abc.mp4");
     }
 
     @Test
     void delete_foreignMedia_isNotFoundAndFileUntouched() {
-        MediaFileEntity media = media(owner, "1/abc.png");
+        MediaFileEntity media = media(owner, "1/abc.mp4");
         when(repository.findById(5L)).thenReturn(Optional.of(media));
         authMock.when(CheckAuthUtil::getAuthUser).thenReturn(stranger);
 
@@ -76,7 +80,7 @@ class MediaServiceImplTest {
                 .isInstanceOf(NotFoundException.class);
 
         verify(repository, never()).delete(media);
-        verify(storage, never()).delete("1/abc.png");
+        verify(storage, never()).delete("1/abc.mp4");
     }
 
     @Test

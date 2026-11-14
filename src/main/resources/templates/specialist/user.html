@@ -59,30 +59,6 @@
 
     <section class="card">
         <div class="section-title">
-            <h2>Материалы</h2>
-            <span class="badge" th:if="${!#lists.isEmpty(media)}"
-                  th:text="${#lists.size(media) + ' шт.'}"></span>
-        </div>
-
-        <div class="empty" th:if="${#lists.isEmpty(media)}">
-            <div>Пользователь не приложил фото или видео.</div>
-        </div>
-
-        <div class="media-grid" th:if="${!#lists.isEmpty(media)}">
-            <figure class="media-item" th:each="m : ${media}">
-                <img th:if="${m.type.name() == 'PHOTO'}"
-                     th:src="@{'/api/v1/media/{id}/content'(id=${m.id})}"
-                     th:alt="${m.originalName}" loading="lazy">
-                <video th:if="${m.type.name() == 'VIDEO'}"
-                       th:src="@{'/api/v1/media/{id}/content'(id=${m.id})}"
-                       controls preload="metadata"></video>
-                <figcaption th:text="${m.originalName}">файл</figcaption>
-            </figure>
-        </div>
-    </section>
-
-    <section class="card">
-        <div class="section-title">
             <h2>Программы</h2>
             <a class="btn btn-sm btn-primary" th:href="@{/specialist/users/{id}/programs/new(id=${userId})}">
                 Составить программу

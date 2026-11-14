@@ -8,6 +8,7 @@ import com.example.demo.store.entities.MediaFileEntity;
 import com.example.demo.store.entities.Roles;
 import com.example.demo.store.entities.TypeMedia;
 import com.example.demo.store.entities.UserEntity;
+import com.example.demo.store.repo.ExerciseRepository;
 import com.example.demo.store.repo.MediaFileRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -19,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -37,6 +37,7 @@ public class MediaServiceImpl implements MediaService {
     private static final long MAX_VIDEO = 50L * 1024 * 1024;
 
     private final MediaFileRepository repository;
+    private final ExerciseRepository exerciseRepository;
     private final FileStorage storage;
 
     @Transactional
@@ -95,20 +96,17 @@ public class MediaServiceImpl implements MediaService {
 
     @Transactional(readOnly = true)
     @Override
-    public List<MediaResponseDto> getByUser(Long userId) {
-        return repository.findByUserIdOrderByCreatedAtDesc(userId).stream()
-                .map(this::toDto).toList();
-    }
-
-    @Transactional(readOnly = true)
-    @Override
     public MediaContent getContent(Long id) {
         MediaFileEntity media = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Файл не найден"));
 
         UserEntity current = CheckAuthUtil.getAuthUser();
         boolean owner = media.getUser().getId().equals(current.getId());
-        if (!owner && current.getRole() != Roles.SPECIALIST) {
+        boolean specialist = current.getRole() == Roles.SPECIALIST;
+        // видео-демонстрация упражнения — часть контента, её видят все авторизованные
+        boolean exerciseVideo = exerciseRepository.existsByVideoMediaIdAndActiveTrue(id);
+
+        if (!owner && !specialist && !exerciseVideo) {
             throw new NotFoundException("Файл не найден");   // 404, а не 403: не раскрываем, что файл есть
         }
 

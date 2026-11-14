@@ -14,4 +14,10 @@ public interface ExerciseService {
     ExerciseResponse get(Long id);
 
     PageResponse<ExerciseResponse> search(String q, String muscleGroup, int page, int size);
+
+    /** Привязать загруженный видеофайл к упражнению. */
+    ExerciseResponse attachVideo(Long exerciseId, Long mediaId);
+
+    /** Отвязать видео; сам файл удаляется отдельно. */
+    ExerciseResponse detachVideo(Long exerciseId);
 }

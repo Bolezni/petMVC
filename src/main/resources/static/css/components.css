@@ -221,3 +221,27 @@
     color: var(--warn);
     border-color: #fecaca;
 }
+/* видео упражнения */
+.video-player {
+    display: block;
+    width: 100%;
+    max-height: 360px;
+    margin: 8px 0;
+    border-radius: 12px;
+    background: #000;
+}
+
+.check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--muted);
+}
+
+.check input {
+    width: auto;
+    min-height: auto;
+    margin: 0;
+}

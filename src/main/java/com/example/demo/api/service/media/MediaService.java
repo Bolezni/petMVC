@@ -4,12 +4,9 @@ import com.example.demo.api.dto.MediaContent;
 import com.example.demo.api.dto.MediaResponseDto;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 public interface MediaService {
+    /** Загружает файл от текущего пользователя (для демонстраций это специалист). */
     MediaResponseDto upload(MultipartFile file);
-
-    List<MediaResponseDto> getByUser(Long userId);
 
     MediaContent getContent(Long id);
 

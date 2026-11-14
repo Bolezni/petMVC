@@ -70,6 +70,22 @@ public class ExerciseServiceImpl implements ExerciseService {
         return PageResponse.from(repository.findAll(spec, pageable).map(ExerciseResponse::from));
     }
 
+    @Transactional
+    @Override
+    public ExerciseResponse attachVideo(Long exerciseId, Long mediaId) {
+        ExerciseEntity exercise = findActive(exerciseId);
+        exercise.setVideoMediaId(mediaId);
+        return ExerciseResponse.from(exercise);
+    }
+
+    @Transactional
+    @Override
+    public ExerciseResponse detachVideo(Long exerciseId) {
+        ExerciseEntity exercise = findActive(exerciseId);
+        exercise.setVideoMediaId(null);
+        return ExerciseResponse.from(exercise);
+    }
+
     private ExerciseEntity findActive(Long id) {
         return repository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new NotFoundException("Упражнение не найдено"));

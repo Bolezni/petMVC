@@ -9,8 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -19,9 +18,14 @@ public class MediaController {
 
     private final MediaService mediaService;
 
-    @GetMapping("/specialist/users/{userId}/media")
-    public List<MediaResponseDto> userMedia(@PathVariable Long userId) {
-        return mediaService.getByUser(userId);
+    /**
+     * Загрузка медиа доступна только специалисту: это видео-демонстрации упражнений.
+     * Пользовательских загрузок в системе нет.
+     */
+    @PostMapping(value = "/specialist/media", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    public MediaResponseDto upload(@RequestParam("file") MultipartFile file) {
+        return mediaService.upload(file);
     }
 
     @GetMapping("/media/{id}/content")
@@ -32,7 +36,7 @@ public class MediaController {
                 .body(c.resource());
     }
 
-    /** Удалить свой файл. Специалист удалять чужие материалы не может. */
+    /** Удалить свой файл. */
     @DeleteMapping("/media/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long id) {

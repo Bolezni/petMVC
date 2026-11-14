@@ -9,10 +9,11 @@ public record ExerciseResponse(
         String description,
         String muscleGroup,
         Difficulty difficulty,
-        String videoUrl
+        String videoUrl,
+        Long videoMediaId
 ) {
     public static ExerciseResponse from(ExerciseEntity e) {
         return new ExerciseResponse(e.getId(), e.getName(), e.getDescription(),
-                e.getMuscleGroup(), e.getDifficulty(), e.getVideoUrl());
+                e.getMuscleGroup(), e.getDifficulty(), e.getVideoUrl(), e.getVideoMediaId());
     }
 }

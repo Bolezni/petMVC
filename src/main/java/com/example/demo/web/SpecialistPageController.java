@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,8 +52,8 @@ public class SpecialistPageController {
     private final QuestionnaireService questionnaireService;
     private final ProgramService programService;
     private final CompletionService completionService;
-    private final MediaService mediaService;
     private final ExerciseService exerciseService;
+    private final MediaService mediaService;
     private final UserRepository userRepository;
 
     /** Одна строка формы программы: пустая или с текущими значениями. */
@@ -80,7 +81,6 @@ public class SpecialistPageController {
         model.addAttribute("userId", id);
         model.addAttribute("user", user);
         model.addAttribute("questionnaire", questionnaire);
-        model.addAttribute("media", mediaService.getByUser(id));
         model.addAttribute("programs", programService.listByUser(id));
         return "specialist/user";
     }
@@ -191,14 +191,23 @@ public class SpecialistPageController {
                                  @RequestParam(required = false) String description,
                                  @RequestParam String muscleGroup,
                                  @RequestParam(required = false) Difficulty difficulty,
-                                 @RequestParam(required = false) String videoUrl) {
+                                 @RequestParam(required = false) String videoUrl,
+                                 @RequestParam(required = false) MultipartFile video) {
+        ExerciseResponse created;
         try {
-            exerciseService.create(new ExerciseRequest(name.trim(), blankToNull(description),
+            created = exerciseService.create(new ExerciseRequest(name.trim(), blankToNull(description),
                     muscleGroup.trim(), difficulty, blankToNull(videoUrl)));
         } catch (RuntimeException ex) {
             log.warn("Не удалось создать упражнение: {}", ex.getMessage());
             return "redirect:/specialist/exercises?error";
         }
+
+        if (video != null && !video.isEmpty()) {
+            if (!attachVideo(created.id(), video)) {
+                return "redirect:/specialist/exercises?videoError";
+            }
+        }
+
         return "redirect:/specialist/exercises?created";
     }
 
@@ -217,7 +226,9 @@ public class SpecialistPageController {
                                  @RequestParam(required = false) String description,
                                  @RequestParam String muscleGroup,
                                  @RequestParam(required = false) Difficulty difficulty,
-                                 @RequestParam(required = false) String videoUrl) {
+                                 @RequestParam(required = false) String videoUrl,
+                                 @RequestParam(required = false) MultipartFile video,
+                                 @RequestParam(defaultValue = "false") boolean removeVideo) {
         try {
             exerciseService.update(id, new ExerciseRequest(name.trim(), blankToNull(description),
                     muscleGroup.trim(), difficulty, blankToNull(videoUrl)));
@@ -225,6 +236,15 @@ public class SpecialistPageController {
             log.warn("Не удалось обновить упражнение {}: {}", id, ex.getMessage());
             return "redirect:/specialist/exercises/" + id + "/edit?error";
         }
+
+        if (video != null && !video.isEmpty()) {
+            if (!attachVideo(id, video)) {
+                return "redirect:/specialist/exercises/" + id + "/edit?videoError";
+            }
+        } else if (removeVideo) {
+            removeVideo(id);
+        }
+
         return "redirect:/specialist/exercises";
     }
 
@@ -235,6 +255,31 @@ public class SpecialistPageController {
     }
 
     // ---------- вспомогательное ----------
+
+    private boolean attachVideo(Long exerciseId, MultipartFile file) {
+        try {
+            Long mediaId = mediaService.upload(file).id();
+            exerciseService.attachVideo(exerciseId, mediaId);
+            return true;
+        } catch (RuntimeException ex) {
+            log.warn("Не удалось загрузить видео для упражнения {}: {}", exerciseId, ex.getMessage());
+            return false;
+        }
+    }
+
+    private void removeVideo(Long exerciseId) {
+        ExerciseResponse current = exerciseService.get(exerciseId);
+        exerciseService.detachVideo(exerciseId);
+
+        if (current.videoMediaId() != null) {
+            try {
+                mediaService.delete(current.videoMediaId());
+            } catch (RuntimeException ex) {
+                log.warn("Видео {} отвязано, но файл не удалён: {}",
+                        current.videoMediaId(), ex.getMessage());
+            }
+        }
+    }
 
     private List<ProgramRow> emptyRows() {
         List<ProgramRow> rows = new ArrayList<>();

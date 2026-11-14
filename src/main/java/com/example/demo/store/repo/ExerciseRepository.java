@@ -16,4 +16,7 @@ public interface ExerciseRepository
     Optional<ExerciseEntity> findByIdAndActiveTrue(Long id);
 
     List<ExerciseEntity> findAllByIdInAndActiveTrue(Collection<Long> ids);
+
+    /** Видео-демонстрация, привязанная к активному упражнению, доступна всем пользователям. */
+    boolean existsByVideoMediaIdAndActiveTrue(Long videoMediaId);
 }

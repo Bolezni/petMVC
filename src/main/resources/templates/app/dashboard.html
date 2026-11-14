@@ -52,19 +52,6 @@
 
     <section class="card">
         <div class="section-title">
-            <h2>Фото и видео</h2>
-            <span class="badge" th:if="${!#lists.isEmpty(media)}"
-                  th:text="${#lists.size(media) + ' шт.'}"></span>
-        </div>
-        <p class="muted" th:if="${#lists.isEmpty(media)}">
-            Приложите фото или короткое видео — специалисту так проще оценить запрос.
-        </p>
-        <a class="btn btn-sm" th:href="@{/app/media}"
-           th:text="${#lists.isEmpty(media) ? 'Добавить материалы' : 'Открыть материалы'}"></a>
-    </section>
-
-    <section class="card">
-        <div class="section-title">
             <h2>Программы</h2>
             <span class="badge" th:if="${!#lists.isEmpty(programs)}"
                   th:text="${#lists.size(programs) + ' шт.'}"></span>

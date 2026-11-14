@@ -10,6 +10,7 @@ public record ProgramItemResponse(
         String description,
         String muscleGroup,
         String videoUrl,
+        Long videoMediaId,
         Integer sets,
         Integer reps,
         String note,
@@ -18,7 +19,7 @@ public record ProgramItemResponse(
     public static ProgramItemResponse from(ProgramItemEntity i) {
         ExerciseEntity e = i.getExercise();
         return new ProgramItemResponse(i.getId(), e.getId(), e.getName(), e.getDescription(),
-                e.getMuscleGroup(), e.getVideoUrl(), i.getSets(), i.getReps(),
-                i.getSpecialistNote(), i.getSortOrder());
+                e.getMuscleGroup(), e.getVideoUrl(), e.getVideoMediaId(),
+                i.getSets(), i.getReps(), i.getSpecialistNote(), i.getSortOrder());
     }
 }

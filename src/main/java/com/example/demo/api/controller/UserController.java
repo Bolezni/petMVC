@@ -3,7 +3,6 @@ package com.example.demo.api.controller;
 import com.example.demo.api.dto.*;
 import com.example.demo.api.security.CheckAuthUtil;
 import com.example.demo.api.service.complete.CompletionService;
-import com.example.demo.api.service.media.MediaService;
 import com.example.demo.api.service.program.ProgramService;
 import com.example.demo.api.service.questionnaire.QuestionnaireService;
 import jakarta.validation.Valid;
@@ -11,10 +10,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -24,8 +21,6 @@ import java.util.List;
 public class UserController {
 
     private final QuestionnaireService service;
-
-    private final MediaService mediaService;
 
     private final ProgramService programService;
 
@@ -42,17 +37,6 @@ public class UserController {
         return service.getMyQuestionnaire();
     }
 
-    @PostMapping(value = "/media", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public MediaResponseDto upload(@RequestParam("file") MultipartFile file) {
-        return mediaService.upload(file);
-    }
-
-    @GetMapping("/media")
-    public List<MediaResponseDto> myMedia() {
-        return mediaService.getByUser(CheckAuthUtil.getAuthUser().getId());
-    }
-
-
     @GetMapping("/programs")
     public List<ProgramSummaryResponse> myPrograms() {
         return programService.myPrograms();
@@ -62,7 +46,6 @@ public class UserController {
     public ProgramResponse getMine(@PathVariable Long id) {
         return programService.getMine(id);
     }
-
 
     @PostMapping("/program-items/{itemId}/completions")
     @ResponseStatus(HttpStatus.CREATED)

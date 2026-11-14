@@ -63,7 +63,13 @@
 
         <p class="note" th:if="${item.note != null and !item.note.isBlank()}" th:text="${item.note}"></p>
 
-        <div class="exercise-actions" th:if="${item.videoUrl != null and !item.videoUrl.isBlank()}">
+        <div class="exercise-actions" th:if="${item.videoMediaId != null}">
+            <video class="video-player" controls preload="metadata"
+                   th:src="@{'/api/v1/media/{id}/content'(id=${item.videoMediaId})}"></video>
+        </div>
+
+        <div class="exercise-actions"
+             th:if="${item.videoMediaId == null and item.videoUrl != null and !item.videoUrl.isBlank()}">
             <a class="btn btn-sm" th:href="${item.videoUrl}" target="_blank" rel="noopener">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="9 6 19 12 9 18 9 6"/></svg>
                 Смотреть видео
