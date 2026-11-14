@@ -96,7 +96,24 @@ public class ExerciseServiceImpl implements ExerciseService {
         if (r.muscleGroup() != null) e.setMuscleGroup(r.muscleGroup().trim());
         if (r.difficulty() != null)  e.setDifficulty(r.difficulty());
         if (r.description() != null) e.setDescription(blankToNull(r.description()));
-        if (r.videoUrl() != null)    e.setVideoUrl(blankToNull(r.videoUrl()));
+        if (r.videoUrl() != null)    e.setVideoUrl(safeVideoUrl(r.videoUrl()));
+    }
+
+    /**
+     * Ссылка уходит в href на страницах, поэтому в БД не должно попасть ничего,
+     * кроме https. Схема javascript:/data: — это XSS по клику.
+     * Проверка здесь, а не только в DTO: веб-форма вызывает сервис напрямую,
+     * без @Valid, и аннотации контроллера её не защищают.
+     */
+    private String safeVideoUrl(String raw) {
+        String url = blankToNull(raw);
+        if (url == null) {
+            return null;
+        }
+        if (!url.regionMatches(true, 0, "https://", 0, 8)) {
+            throw new IllegalArgumentException("Ссылка на видео должна начинаться с https://");
+        }
+        return url;
     }
 
     private static String blankToNull(String s) {

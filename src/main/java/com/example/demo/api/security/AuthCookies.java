@@ -17,19 +17,22 @@ import java.time.Duration;
  * Cookie с access-токеном живёт столько же, сколько refresh: сам токен всё равно
  * проверяется по сроку, а долгоживущая cookie нужна, чтобы JwtFilter мог
  * незаметно обновить протухший access по refresh-токену.
+ *
+ * Флаг Secure включается на сервере (COOKIE_SECURE=true): локально сайт работает
+ * по http, и с Secure браузер вообще не стал бы присылать cookie.
  */
 @Component
 public class AuthCookies {
 
     public static final String REFRESH_COOKIE = "refresh_token";
 
-    private final long accessTtlMs;
     private final long refreshTtlMs;
+    private final boolean secure;
 
-    public AuthCookies(@Value("${jwt.access-ttl-ms}") long accessTtlMs,
-                       @Value("${jwt.refresh-ttl-ms}") long refreshTtlMs) {
-        this.accessTtlMs = accessTtlMs;
+    public AuthCookies(@Value("${jwt.refresh-ttl-ms}") long refreshTtlMs,
+                       @Value("${app.cookies.secure:false}") boolean secure) {
         this.refreshTtlMs = refreshTtlMs;
+        this.secure = secure;
     }
 
     public void write(HttpServletResponse response, AuthenticationResponse tokens) {
@@ -50,6 +53,7 @@ public class AuthCookies {
     private void add(HttpServletResponse response, String name, String value, long ttlMs) {
         ResponseCookie cookie = ResponseCookie.from(name, value)
                 .httpOnly(true)
+                .secure(secure)
                 .path("/")
                 .sameSite("Lax")
                 .maxAge(Duration.ofMillis(ttlMs))

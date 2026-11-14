@@ -7,5 +7,20 @@
 		max_size 60MB
 	}
 
-	reverse_proxy app:8080
+	# Заголовки безопасности. Скриптов на сайте нет, поэтому script-src 'none'.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+		Content-Security-Policy "default-src 'self'; img-src 'self' data:; media-src 'self'; style-src 'self'; script-src 'none'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+		-Server
+	}
+
+	# Caddy ПЕРЕЗАПИСЫВАЕТ X-Forwarded-For реальным адресом клиента.
+	# Без этого клиент мог бы подставить свой заголовок и обойти лимит попыток.
+	reverse_proxy app:8080 {
+		header_up X-Forwarded-For {remote_host}
+	}
 }

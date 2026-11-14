@@ -13,12 +13,13 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Простейший ограничитель попыток логина/регистрации: не более 10 в минуту
- * с одного IP на один эндпоинт. Хранит состояние в памяти процесса —
+ * Простейший ограничитель попыток: не более 20 запросов в минуту
+ * с одного IP на эндпоинт. Хранит состояние в памяти процесса —
  * при переходе на несколько инстансов заменить на Redis или лимит в Caddy.
  */
 @Slf4j
@@ -30,14 +31,20 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final long WINDOW_MS = 60_000L;
     private static final int MAX_KEYS = 10_000;
 
+    /** Что ограничиваем: вход, регистрация, обновление токена и создание специалистов. */
+    private static final List<String> LIMITED = List.of(
+            "/api/v1/auth/login",
+            "/api/v1/auth/register",
+            "/api/v1/auth/refresh",
+            "/api/v1/admin/"
+    );
+
     private final Map<String, Deque<Long>> attempts = new ConcurrentHashMap<>();
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String uri = request.getRequestURI();
-        return !(uri.equals("/api/v1/auth/login")
-                || uri.equals("/api/v1/auth/register")
-                || uri.equals("/api/v1/auth/refresh"));
+        return LIMITED.stream().noneMatch(uri::startsWith);
     }
 
     @Override
@@ -78,11 +85,16 @@ public class RateLimitFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Берём ПОСЛЕДНИЙ адрес из X-Forwarded-For: прокси (Caddy) добавляет реальный
+     * IP клиента в конец, а всё, что пришло в заголовке от клиента, — подделка.
+     * Первый элемент доверять нельзя, иначе лимит обходится одним заголовком.
+     */
     private String clientIp(HttpServletRequest request) {
         String forwarded = request.getHeader("X-Forwarded-For");
         if (forwarded != null && !forwarded.isBlank()) {
-            int comma = forwarded.indexOf(',');
-            return (comma > 0 ? forwarded.substring(0, comma) : forwarded).trim();
+            int comma = forwarded.lastIndexOf(',');
+            return (comma >= 0 ? forwarded.substring(comma + 1) : forwarded).trim();
         }
         return request.getRemoteAddr();
     }

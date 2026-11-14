@@ -45,6 +45,9 @@ app:
     # Пусто = CORS выключен, страницы и API на одном origin.
     # Для отдельного фронтенда: https://app.example.com или список через запятую.
     allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+  cookies:
+    # true на сервере с HTTPS, false локально (по http браузер не пришлёт Secure-cookie)
+    secure: ${COOKIE_SECURE:false}
 
 management:
   endpoints:
