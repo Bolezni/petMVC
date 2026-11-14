@@ -14,6 +14,9 @@ import com.example.demo.store.repo.MediaFileRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -96,17 +99,11 @@ public class MediaServiceImpl implements MediaService {
 
     @Transactional(readOnly = true)
     @Override
-    public MediaContent getContent(Long id) {
+    public MediaContent getContent(Long id, boolean signedAccess) {
         MediaFileEntity media = repository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Файл не найден"));
 
-        UserEntity current = CheckAuthUtil.getAuthUser();
-        boolean owner = media.getUser().getId().equals(current.getId());
-        boolean specialist = current.getRole() == Roles.SPECIALIST;
-        // видео-демонстрация упражнения — часть контента, её видят все авторизованные
-        boolean exerciseVideo = exerciseRepository.existsByVideoMediaIdAndActiveTrue(id);
-
-        if (!owner && !specialist && !exerciseVideo) {
+        if (!signedAccess && !hasAccess(media)) {
             throw new NotFoundException("Файл не найден");   // 404, а не 403: не раскрываем, что файл есть
         }
 
@@ -114,6 +111,24 @@ public class MediaServiceImpl implements MediaService {
         if (!resource.exists()) throw new NotFoundException("Файл не найден");
 
         return new MediaContent(resource, media.getContentType());
+    }
+
+    /** Кто может смотреть файл без подписи: владелец, специалист, видео упражнения. */
+    private boolean hasAccess(MediaFileEntity media) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
+            return false;
+        }
+
+        UserEntity current = CheckAuthUtil.getAuthUser();
+        boolean owner = media.getUser().getId().equals(current.getId());
+        boolean specialist = current.getRole() == Roles.SPECIALIST;
+        // видео-демонстрация упражнения — часть контента, её видят все авторизованные
+        boolean exerciseVideo = exerciseRepository.existsByVideoMediaIdAndActiveTrue(media.getId());
+
+        return owner || specialist || exerciseVideo;
     }
 
     @Transactional

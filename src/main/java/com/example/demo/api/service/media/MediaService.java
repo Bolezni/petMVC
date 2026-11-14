@@ -8,7 +8,11 @@ public interface MediaService {
     /** Загружает файл от текущего пользователя (для демонстраций это специалист). */
     MediaResponseDto upload(MultipartFile file);
 
-    MediaContent getContent(Long id);
+    /**
+     * @param signedAccess true — доступ уже подтверждён подписью в ссылке,
+     *                     проверять пользователя не нужно.
+     */
+    MediaContent getContent(Long id, boolean signedAccess);
 
     /** Удаляет файл из хранилища и запись из БД. Только владелец. */
     void delete(Long id);

@@ -12,6 +12,7 @@ import com.example.demo.api.dto.ProgramUpdateRequest;
 import com.example.demo.api.dto.QuestionnaireResponseDto;
 import com.example.demo.api.dto.UserListItemDto;
 import com.example.demo.api.exception.exeptions.NotFoundException;
+import com.example.demo.api.security.MediaUrlSigner;
 import com.example.demo.api.service.complete.CompletionService;
 import com.example.demo.api.service.exercise.ExerciseService;
 import com.example.demo.api.service.media.MediaService;
@@ -54,6 +55,7 @@ public class SpecialistPageController {
     private final CompletionService completionService;
     private final ExerciseService exerciseService;
     private final MediaService mediaService;
+    private final MediaUrlSigner mediaUrlSigner;
     private final UserRepository userRepository;
 
     /** Одна строка формы программы: пустая или с текущими значениями. */
@@ -217,6 +219,8 @@ public class SpecialistPageController {
 
         model.addAttribute("exercise", exercise);
         model.addAttribute("difficulties", Difficulty.values());
+        model.addAttribute("videoUrl", exercise.videoMediaId() == null
+                ? null : mediaUrlSigner.url(exercise.videoMediaId()));
         return "specialist/exercise-edit";
     }
 

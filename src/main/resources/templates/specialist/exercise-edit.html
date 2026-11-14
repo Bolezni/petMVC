@@ -28,7 +28,7 @@
     <section class="card" th:if="${exercise.videoMediaId != null}">
         <h2>Текущее видео</h2>
         <video class="video-player" controls preload="metadata"
-               th:src="@{'/api/v1/media/{id}/content'(id=${exercise.videoMediaId})}"></video>
+               th:src="${videoUrl}"></video>
         <label class="check">
             <input type="checkbox" name="removeVideo" value="true" form="exercise-form">
             <span>Удалить видео при сохранении</span>

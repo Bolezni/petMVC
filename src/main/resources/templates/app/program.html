@@ -65,7 +65,7 @@
 
         <div class="exercise-actions" th:if="${item.videoMediaId != null}">
             <video class="video-player" controls preload="metadata"
-                   th:src="@{'/api/v1/media/{id}/content'(id=${item.videoMediaId})}"></video>
+                   th:src="${videoUrls.get(item.videoMediaId)}"></video>
         </div>
 
         <div class="exercise-actions"

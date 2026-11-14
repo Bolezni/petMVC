@@ -128,6 +128,7 @@ public class GlobalExceptionHandler {
     // бизнес-ошибки, которые мы кидаем как RuntimeException("...")
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntime(RuntimeException ex) {
+        log.warn("Ошибка запроса: {}", ex.getMessage(), ex);
         return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
     }
 

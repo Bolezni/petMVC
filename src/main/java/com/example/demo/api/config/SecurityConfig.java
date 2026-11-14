@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -65,6 +66,8 @@ public class SecurityConfig {
                         .requestMatchers("/", "/login", "/register", "/css/**", "/js/**", "/favicon.ico").permitAll()
                         // создание специалиста защищено ключом X-Admin-Key, а не сессией
                         .requestMatchers("/admin", "/admin/**").permitAll()
+                        // файл защищён подписью в ссылке либо проверкой в контроллере (см. MediaController)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/media/*/content").permitAll()
                         .requestMatchers("/api/v1/specialist/**").hasAuthority(Roles.SPECIALIST.name())
                         .requestMatchers("/specialist/**").hasAuthority(Roles.SPECIALIST.name())
                         .requestMatchers("/api/v1/user/**").hasAuthority(Roles.USER.name())

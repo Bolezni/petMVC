@@ -2,11 +2,13 @@ package com.example.demo.web;
 
 import com.example.demo.api.dto.CompletionResponse;
 import com.example.demo.api.dto.PageResponse;
+import com.example.demo.api.dto.ProgramItemResponse;
 import com.example.demo.api.dto.ProgramResponse;
 import com.example.demo.api.dto.ProgramSummaryResponse;
 import com.example.demo.api.dto.QuestionnaireCreateDto;
 import com.example.demo.api.dto.QuestionnaireResponseDto;
 import com.example.demo.api.exception.exeptions.NotFoundException;
+import com.example.demo.api.security.MediaUrlSigner;
 import com.example.demo.api.service.complete.CompletionService;
 import com.example.demo.api.service.program.ProgramService;
 import com.example.demo.api.service.questionnaire.QuestionnaireService;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -32,6 +35,7 @@ public class AppController {
     private final QuestionnaireService questionnaireService;
     private final ProgramService programService;
     private final CompletionService completionService;
+    private final MediaUrlSigner mediaUrlSigner;
 
     @GetMapping
     public String dashboard(Model model) {
@@ -80,9 +84,18 @@ public class AppController {
                 .map(CompletionResponse::programItemId)
                 .collect(Collectors.toSet());
 
+        // подписанные ссылки готовим здесь: из шаблона вызывать бины Thymeleaf запрещает
+        Map<Long, String> videoUrls = program.items().stream()
+                .filter(item -> item.videoMediaId() != null)
+                .collect(Collectors.toMap(
+                        ProgramItemResponse::videoMediaId,
+                        item -> mediaUrlSigner.url(item.videoMediaId()),
+                        (first, second) -> first));
+
         model.addAttribute("program", program);
         model.addAttribute("completions", completions);
         model.addAttribute("completedItemIds", completedItemIds);
+        model.addAttribute("videoUrls", videoUrls);
         return "app/program";
     }
 
