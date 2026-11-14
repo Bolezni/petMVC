@@ -75,8 +75,8 @@
                        min="1" max="100" placeholder="3">
                 <input type="number" th:name="${'reps' + r.index}" th:value="${r.reps}"
                        min="1" max="1000" placeholder="12">
-                <input type="text" th:name="${'note' + r.index}" th:value="${r.note}"
-                       maxlength="1000" placeholder="Медленно">
+                <input type="text" th:name="${'note' + r.index}" th:value="${r.note != null ? r.note : 'Медленно'}"
+                       maxlength="1000">
             </div>
         </fieldset>
 

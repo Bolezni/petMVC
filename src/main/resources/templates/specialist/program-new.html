@@ -70,14 +70,14 @@
             </div>
 
             <div class="row-grid" th:each="r : ${rows}">
-                <select th:name="${'exerciseId' + r}">
+                <select th:name="${'exerciseId' + r.index}">
                     <option value="">— не выбрано —</option>
                     <option th:each="ex : ${exercises}" th:value="${ex.id}"
                             th:text="${ex.name + ' · ' + ex.muscleGroup}"></option>
                 </select>
-                <input type="number" th:name="${'sets' + r}" min="1" max="100" placeholder="3">
-                <input type="number" th:name="${'reps' + r}" min="1" max="1000" placeholder="12">
-                <input type="text" th:name="${'note' + r}" maxlength="1000" placeholder="Медленно">
+                <input type="number" th:name="${'sets' + r.index}" min="1" max="100" placeholder="3">
+                <input type="number" th:name="${'reps' + r.index}" min="1" max="1000" placeholder="12">
+                <input type="text" th:name="${'note' + r.index}" maxlength="1000" value="Медленно">
             </div>
         </fieldset>
 
