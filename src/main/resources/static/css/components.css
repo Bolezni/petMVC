@@ -194,3 +194,30 @@
         height: 120px;
     }
 }
+
+/* удаление медиа */
+.media-remove {
+    border-top: 1px solid var(--border);
+    margin: 0;
+    padding: 8px 10px;
+}
+
+.media-remove summary {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    list-style: none;
+}
+
+.media-remove summary::-webkit-details-marker {
+    display: none;
+}
+
+.media-remove[open] summary {
+    margin-bottom: 8px;
+}
+
+.media-remove .btn {
+    color: var(--warn);
+    border-color: #fecaca;
+}

@@ -118,6 +118,26 @@ public class MediaServiceImpl implements MediaService {
         return new MediaContent(resource, media.getContentType());
     }
 
+    @Transactional
+    @Override
+    public void delete(Long id) {
+        MediaFileEntity media = repository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Файл не найден"));
+
+        UserEntity current = CheckAuthUtil.getAuthUser();
+        boolean owner = media.getUser().getId().equals(current.getId());
+        if (!owner) {
+            throw new NotFoundException("Файл не найден");   // удалять может только владелец
+        }
+
+        // сначала фиксируем удаление записи: если БД упадёт, файл останется целым
+        repository.delete(media);
+        repository.flush();
+
+        // файл удаляем best-effort: осиротевший файл безвреден, битая запись — нет
+        storage.delete(media.getStorageKey());
+    }
+
     // клиентский Content-Type легко подделать, проверяем первые байты
     private boolean matchesSignature(MultipartFile file, String ext) throws IOException {
         byte[] h = new byte[12];

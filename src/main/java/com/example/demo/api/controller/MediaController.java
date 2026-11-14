@@ -2,14 +2,13 @@ package com.example.demo.api.controller;
 
 import com.example.demo.api.dto.MediaContent;
 import com.example.demo.api.dto.MediaResponseDto;
-import com.example.demo.api.security.CheckAuthUtil;
 import com.example.demo.api.service.media.MediaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -31,5 +30,12 @@ public class MediaController {
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(c.contentType()))
                 .body(c.resource());
+    }
+
+    /** Удалить свой файл. Специалист удалять чужие материалы не может. */
+    @DeleteMapping("/media/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long id) {
+        mediaService.delete(id);
     }
 }

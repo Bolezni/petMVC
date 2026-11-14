@@ -23,7 +23,9 @@
     </p>
 
     <div class="alert alert-ok" th:if="${param.uploaded}">Файл загружен.</div>
-    <div class="alert alert-error" th:if="${param.error}">
+    <div class="alert alert-ok" th:if="${param.deleted}">Файл удалён.</div>
+    <div class="alert alert-error" th:if="${param.error == 'delete'}">Не удалось удалить файл.</div>
+    <div class="alert alert-error" th:if="${param.error != null and param.error != 'delete'}">
         Не удалось загрузить файл. Поддерживаются JPG, PNG, WebP, MP4 и MOV,
         фото до 10 МБ, видео до 50 МБ.
     </div>
@@ -54,6 +56,13 @@
                        th:src="@{'/api/v1/media/{id}/content'(id=${m.id})}"
                        controls preload="metadata"></video>
                 <figcaption th:text="${m.originalName}">файл</figcaption>
+
+                <details class="acc media-remove">
+                    <summary>Удалить</summary>
+                    <form method="post" th:action="@{/app/media/{id}/delete(id=${m.id})}">
+                        <button class="btn btn-sm btn-block" type="submit">Удалить файл</button>
+                    </form>
+                </details>
             </figure>
         </div>
     </section>

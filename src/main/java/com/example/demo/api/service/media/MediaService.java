@@ -13,5 +13,6 @@ public interface MediaService {
 
     MediaContent getContent(Long id);
 
-
+    /** Удаляет файл из хранилища и запись из БД. Только владелец. */
+    void delete(Long id);
 }

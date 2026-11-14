@@ -94,6 +94,16 @@ public class AppController {
         return "redirect:/app/media?uploaded";
     }
 
+    @PostMapping("/media/{id}/delete")
+    public String deleteMedia(@PathVariable Long id) {
+        try {
+            mediaService.delete(id);
+        } catch (RuntimeException ex) {
+            return "redirect:/app/media?error=delete";
+        }
+        return "redirect:/app/media?deleted";
+    }
+
     @GetMapping("/programs/{id}")
     public String program(@PathVariable Long id, Model model) {
         ProgramResponse program = programService.getMine(id);
