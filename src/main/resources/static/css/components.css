@@ -245,3 +245,7 @@
     min-height: auto;
     margin: 0;
 }
+/* баннер «страница устарела» под хедером */
+.banner-alert {
+    margin: 16px 0 0;
+}

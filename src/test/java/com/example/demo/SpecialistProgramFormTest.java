@@ -44,4 +44,25 @@ class SpecialistProgramFormTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("value=\"Медленно\"")));
     }
+
+    /**
+     * Регрессия: навигация и форма выхода зависели от #authentication из extras-библиотеки,
+     * которой нет, поэтому блок молча не рендерился и выйти из аккаунта было нельзя.
+     */
+    @Test
+    void header_showsNavigationAndLogoutForAuthenticatedUser() throws Exception {
+        mockMvc.perform(get("/specialist/users/1/programs/new")
+                        .with(user("spec@test.local").authorities(SPECIALIST)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Выйти")))
+                .andExpect(content().string(containsString("name=\"_csrf\"")))
+                .andExpect(content().string(containsString("/specialist/exercises")));
+    }
+
+    @Test
+    void header_hidesNavigationForAnonymousUser() throws Exception {
+        mockMvc.perform(get("/login"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("Выйти"))));
+    }
 }

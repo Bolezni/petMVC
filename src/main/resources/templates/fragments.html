@@ -2,25 +2,34 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<header class="topbar" th:fragment="topbar">
-    <a class="brand" th:href="@{/app}" th:if="${!isSpecialist}">
-        <span class="brand-dot"></span>
-        petMVP
-    </a>
-    <a class="brand" th:href="@{/specialist}" th:if="${isSpecialist}">
-        <span class="brand-dot"></span>
-        petMVP
-    </a>
+<div th:fragment="topbar">
+    <header class="topbar">
+        <a class="brand" th:href="@{/app}" th:if="${!isSpecialist}">
+            <span class="brand-dot"></span>
+            petMVP
+        </a>
+        <a class="brand" th:href="@{/specialist}" th:if="${isSpecialist}">
+            <span class="brand-dot"></span>
+            petMVP
+        </a>
 
-    <nav class="nav" th:if="${#authentication != null and #authentication.name != 'anonymousUser'}">
-        <a th:if="${isSpecialist}" th:href="@{/specialist}">Пользователи</a>
-        <a th:if="${isSpecialist}" th:href="@{/specialist/exercises}">Упражнения</a>
-        <a th:if="${!isSpecialist}" th:href="@{/app}">Кабинет</a>
-        <form method="post" th:action="@{/logout}">
-            <button class="link-button" type="submit">Выйти</button>
-        </form>
-    </nav>
-</header>
+        <nav class="nav" th:if="${authenticated}">
+            <a th:if="${isSpecialist}" th:href="@{/specialist}">Пользователи</a>
+            <a th:if="${isSpecialist}" th:href="@{/specialist/exercises}">Упражнения</a>
+            <a th:if="${!isSpecialist}" th:href="@{/app}">Кабинет</a>
+            <form method="post" th:action="@{/logout}">
+                <button class="link-button" type="submit">Выйти</button>
+            </form>
+        </nav>
+    </header>
+
+    <!-- сюда попадает пользователь, если форма пришла со старой страницы -->
+    <div class="container" th:if="${param.csrf}">
+        <div class="alert alert-error banner-alert">
+            Страница устарела, действие не выполнено. Повторите его — токен уже обновлён.
+        </div>
+    </div>
+</div>
 
 <footer class="footer" th:fragment="footer">
     petMVP · ранний доступ
