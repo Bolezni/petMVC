@@ -2,11 +2,9 @@ package com.example.demo.api.config;
 
 import com.example.demo.api.security.jwt.JwtFilter;
 import com.example.demo.store.entities.Roles;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,10 +24,8 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
-import java.net.URI;
 import java.util.Set;
 
-@Slf4j
 @Configuration
 @EnableMethodSecurity
 @EnableWebSecurity
@@ -50,21 +46,6 @@ public class SecurityConfig {
     @Value("${app.cookies.secure:false}")
     private boolean cookieSecure;
 
-    /**
-     * JwtFilter добавлен в цепочку безопасности вручную. Spring Boot по умолчанию
-     * регистрирует любой бин-фильтр ещё и как обычный сервлет-фильтр, из-за чего
-     * он выполнялся дважды: ранняя аутентификация заставляла SessionManagementFilter
-     * применять CsrfAuthenticationStrategy на каждом запросе, CSRF-токен менялся,
-     * и формы со старым токеном получали 403.
-     */
-    @Bean
-    public org.springframework.boot.web.servlet.FilterRegistrationBean<JwtFilter> jwtFilterRegistration(
-            JwtFilter filter) {
-        var registration = new org.springframework.boot.web.servlet.FilterRegistrationBean<>(filter);
-        registration.setEnabled(false);
-        return registration;
-    }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http){
         return http
@@ -73,12 +54,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(csrfTokenRepository())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
-                        .requireCsrfProtectionMatcher(new CsrfRequirementMatcher())
-                        // по умолчанию здесь CsrfAuthenticationStrategy: она перевыпускает
-                        // токен при каждой аутентификации. У нас аутентификация происходит
-                        // на каждом запросе (JWT), поэтому токен менялся постоянно и формы
-                        // со старым токеном получали 403. Сессий нет — стратегия не нужна.
-                        .sessionAuthenticationStrategy((authentication, request, response) -> { }))
+                        .requireCsrfProtectionMatcher(new CsrfRequirementMatcher()))
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
@@ -111,37 +87,13 @@ public class SecurityConfig {
                             res.sendRedirect("/login");
                         })
                         .accessDeniedHandler((req, res, e) -> {
-                            // неверный/просроченный CSRF-токен: чаще всего это вкладка,
-                            // открытая до обновления страницы, либо протухшая форма
+                            // неверный/просроченный CSRF-токен — это не «нет прав»,
+                            // редирект тут скрыл бы проблему от пользователя
                             if (e instanceof CsrfException) {
-                                log.warn("CSRF-токен не принят: {} {} (cookie XSRF-TOKEN: {})",
-                                        req.getMethod(), req.getRequestURI(), hasCsrfCookie(req));
-
-                                if (isApi(req)) {
-                                    res.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                                    res.setContentType("application/json;charset=UTF-8");
-                                    res.getWriter().write("{\"error\":\"Форма устарела, обновите страницу\"}");
-                                    return;
-                                }
-
-                                // возвращаем на ту же страницу с пометкой: страница
-                                // перезагрузится, получит свежий токен и покажет баннер
-                                String referer = req.getHeader("Referer");
-                                if (isSameHost(req, referer)) {
-                                    res.sendRedirect(withCsrfFlag(referer));
-                                    return;
-                                }
-
                                 res.setStatus(HttpServletResponse.SC_FORBIDDEN);
                                 res.setContentType("text/html;charset=UTF-8");
-                                res.getWriter().write("<!DOCTYPE html><html lang=\"ru\"><head>"
-                                        + "<meta charset=\"UTF-8\"><title>403 — petMVP</title></head>"
-                                        + "<body>"
-                                        + "<h1>Форма устарела</h1>"
-                                        + "<p>Страница была открыта до обновления сайта, поэтому защитный токен не совпал.</p>"
-                                        + "<p>Обновите страницу (F5) и повторите действие.</p>"
-                                        + "<p><a href=\"/\">На главную</a></p>"
-                                        + "</body></html>");
+                                res.getWriter().write("<h1>403</h1>"
+                                        + "<p>Форма устарела. Обновите страницу и попробуйте снова.</p>");
                                 return;
                             }
 
@@ -154,13 +106,7 @@ public class SecurityConfig {
                             res.setContentType("application/json;charset=UTF-8");
                             res.getWriter().write("{\"error\":\"Недостаточно прав\"}");
                         }))
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                        // Сессий нет, защита от fixation не нужна. Без этого
-                        // SessionManagementFilter на каждом запросе применяет
-                        // CsrfAuthenticationStrategy и перевыпускает CSRF-токен,
-                        // из-за чего формы со старым токеном получают 403.
-                        .sessionAuthenticationStrategy((authentication, request, response) -> { }))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
 
@@ -168,40 +114,6 @@ public class SecurityConfig {
 
     private boolean isApi(HttpServletRequest request) {
         return request.getRequestURI().startsWith("/api/");
-    }
-
-    private boolean hasCsrfCookie(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            return false;
-        }
-        for (Cookie cookie : cookies) {
-            if ("XSRF-TOKEN".equals(cookie.getName()) && !cookie.getValue().isBlank()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** Реферер должен вести на этот же хост, иначе редирект станет открытым. */
-    private boolean isSameHost(HttpServletRequest request, String referer) {
-        if (referer == null || referer.isBlank()) {
-            return false;
-        }
-        try {
-            String host = URI.create(referer).getHost();
-            return host != null && host.equalsIgnoreCase(request.getServerName());
-        } catch (RuntimeException ex) {
-            return false;
-        }
-    }
-
-    private String withCsrfFlag(String referer) {
-        String flag = "csrf=expired";
-        if (referer.contains("csrf=expired")) {
-            return referer;
-        }
-        return referer + (referer.contains("?") ? "&" : "?") + flag;
     }
 
     /** Cookie с токеном: доступна JS (для будущего SPA), Secure и SameSite как у остальных. */

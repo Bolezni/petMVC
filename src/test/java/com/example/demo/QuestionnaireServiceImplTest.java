@@ -2,6 +2,7 @@ package com.example.demo;
 
 import com.example.demo.api.dto.QuestionnaireCreateDto;
 import com.example.demo.api.dto.QuestionnaireResponseDto;
+import com.example.demo.api.notify.TelegramNotifier;
 import com.example.demo.api.security.CheckAuthUtil;
 import com.example.demo.api.service.questionnaire.QuestionnaireServiceImpl;
 import com.example.demo.store.entities.QuestionnaireEntity;
@@ -28,6 +29,9 @@ class QuestionnaireServiceImplTest {
 
     @Mock
     private QuestionnaireRepository repository;
+
+    @Mock
+    private TelegramNotifier telegramNotifier;
 
     @InjectMocks
     private QuestionnaireServiceImpl service;

@@ -5,6 +5,7 @@ import com.example.demo.api.dto.QuestionnaireCreateDto;
 import com.example.demo.api.dto.QuestionnaireResponseDto;
 import com.example.demo.api.dto.UserListItemDto;
 import com.example.demo.api.exception.exeptions.NotFoundException;
+import com.example.demo.api.notify.TelegramNotifier;
 import com.example.demo.api.security.CheckAuthUtil;
 import com.example.demo.store.entities.QuestionnaireEntity;
 import com.example.demo.store.entities.Roles;
@@ -31,6 +32,8 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
 
     private final UserRepository userRepository;
 
+    private final TelegramNotifier telegramNotifier;
+
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
     public void createQuestionnaire(QuestionnaireCreateDto dto) {
@@ -43,6 +46,13 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
                 .build();
 
         repository.save(questionnaire);
+
+        // специалист должен узнать о новой анкете, иначе цикл не замкнётся
+        try {
+            telegramNotifier.notifySpecialist(buildNotification(user, dto));
+        } catch (RuntimeException ex) {
+            log.warn("Уведомление об анкете не отправлено: {}", ex.getMessage());
+        }
     }
 
     @Transactional(readOnly = true)
@@ -74,6 +84,18 @@ public class QuestionnaireServiceImpl implements QuestionnaireService {
         return PageResponse.from(
                 repository.findUsersWithQuestionnaire(Roles.USER, pageable)
         );
+    }
+
+    private String buildNotification(UserEntity user, QuestionnaireCreateDto dto) {
+        String request = dto.request() == null ? "" : dto.request();
+        if (request.length() > 300) {
+            request = request.substring(0, 300) + "…";
+        }
+
+        return "Новая анкета\n"
+                + "Пользователь: " + user.getEmail() + "\n"
+                + "Запрос: " + request + "\n"
+                + "Открыть: " + telegramNotifier.pageUrl("/specialist/users/" + user.getId());
     }
 
     private Map<String, Object> buildData(QuestionnaireCreateDto dto) {
