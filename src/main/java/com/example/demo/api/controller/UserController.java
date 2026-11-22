@@ -2,15 +2,18 @@ package com.example.demo.api.controller;
 
 import com.example.demo.api.dto.*;
 import com.example.demo.api.security.CheckAuthUtil;
+import com.example.demo.api.security.CustomUserDetails;
 import com.example.demo.api.service.complete.CompletionService;
 import com.example.demo.api.service.program.ProgramService;
 import com.example.demo.api.service.questionnaire.QuestionnaireService;
+import com.example.demo.api.service.user.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +28,8 @@ public class UserController {
     private final ProgramService programService;
 
     private final CompletionService completionService;
+
+    private final UserService userService;
 
     @PostMapping("/questionnaire")
     public ResponseEntity<?> buildQuestionnaire(@Valid @RequestBody QuestionnaireCreateDto request) {
@@ -61,5 +66,16 @@ public class UserController {
             @RequestParam(defaultValue = "0") @Min(0) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return completionService.listMine(programId, page, size);
+    }
+
+    @GetMapping("/profile")
+    public UserDto myProfile() {
+        return userService.getMyProfile();
+    }
+
+    @PutMapping("/profile")
+    public UserDto updateProfile(@AuthenticationPrincipal CustomUserDetails currentUser,
+                                 @Valid @RequestBody UserUpdateRequest request) {
+        return userService.update(currentUser.user(), request);
     }
 }
