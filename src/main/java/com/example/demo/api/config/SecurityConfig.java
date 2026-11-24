@@ -98,6 +98,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/admin/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        .requestMatchers("/app/profile").authenticated()
+                        .requestMatchers("/app/users", "/app/users/**").hasAuthority(Roles.SPECIALIST.name())
+                        .requestMatchers("/app", "/app/questionnaire/**").hasAuthority(Roles.USER.name())
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, e) -> {

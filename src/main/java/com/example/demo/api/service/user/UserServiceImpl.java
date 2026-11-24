@@ -33,12 +33,15 @@ public class UserServiceImpl implements UserService {
             throw new ConflictException("Email уже занят");
         }
 
-        currentUser.setName(request.name().trim());
-        currentUser.setSurname(request.surname().trim());
+        currentUser.setName(safeTrim(request.name()));
+        currentUser.setSurname(safeTrim(request.surname()));
         currentUser.setEmail(newEmail);
         currentUser.setPhone(request.phone());
         currentUser.setGender(request.gender());
-        currentUser.setBirthday(request.birthday());
+
+        if (request.birthday() != null || currentUser.getBirthday() == null) {
+            currentUser.setBirthday(request.birthday());
+        }
 
         UserEntity saved = userRepository.saveAndFlush(currentUser);
 
@@ -48,5 +51,9 @@ public class UserServiceImpl implements UserService {
 
     private static String normalizeEmail(String email) {
         return email.trim().toLowerCase();
+    }
+
+    private static String safeTrim(String s) {
+        return s == null ? null : s.trim();
     }
 }

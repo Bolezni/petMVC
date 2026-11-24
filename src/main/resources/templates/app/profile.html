@@ -15,7 +15,7 @@
 <div th:replace="~{fragments :: topbar}"></div>
 
 <main class="container">
-    <a class="back" th:href="@{/app}">← В кабинет</a>
+    <a class="back" th:href="${backUrl}" th:text="${backLabel}"></a>
 
     <h1>Профиль</h1>
     <p class="muted">Ваши данные видны только вам и вашему специалисту.</p>
@@ -27,13 +27,15 @@
     <section class="card">
         <div class="section-title">
             <h2>Мои данные</h2>
-            <span class="badge badge-done" th:text="${me.role == 'SPECIALIST' ? 'Специалист' : 'Клиент'}">Клиент</span>
+            <span class="badge badge-done"
+                  th:text="${me.role != null and me.role.name() == 'SPECIALIST'} ? 'Специалист' : 'Клиент'">Клиент</span>
         </div>
 
         <ul class="list">
             <li>
                 <span class="muted">Имя</span>
-                <span th:text="${(me.name != null ? me.name : '') + ' ' + (me.surname != null ? me.surname : '')} ?: '—'"></span>
+                <span th:with="fullName=${#strings.trim((me.name ?: '') + ' ' + (me.surname ?: ''))}"
+                      th:text="${#strings.isEmpty(fullName) ? '—' : fullName}"></span>
             </li>
             <li>
                 <span class="muted">Email</span>
@@ -45,7 +47,8 @@
             </li>
             <li>
                 <span class="muted">Пол</span>
-                <span th:text="${me.gender != null ? (me.gender == 'MAN' ? 'Мужской' : 'Женский') : '—'}"></span></li>
+                <span th:text="${me.gender != null ? (me.gender.name() == 'MAN' ? 'Мужской' : 'Женский') : '—'}"></span>
+            </li>
             <li>
                 <span class="muted">Дата рождения</span>
                 <span th:text="${me.birthday != null ? #temporals.format(me.birthday, 'dd.MM.yyyy') : '—'}"></span>
@@ -73,8 +76,7 @@
 
             <label class="field">
                 <span class="field-label">Фамилия</span>
-                <input type="text" th:field="*{surname}" required
-                       placeholder="Например: Петров">
+                <input type="text" th:field="*{surname}" placeholder="Например: Петров">
                 <span class="hint" style="color: #dc2626;"
                       th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}"></span>
             </label>

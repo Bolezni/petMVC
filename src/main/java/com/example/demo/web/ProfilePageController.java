@@ -18,8 +18,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.time.LocalDate;
-
 @Controller
 @RequestMapping("/app")
 @RequiredArgsConstructor
@@ -31,10 +29,11 @@ public class ProfilePageController {
     public String profile(@AuthenticationPrincipal CustomUserDetails currentUser, Model model) {
         UserDto me = UserDto.from(currentUser.user());
         if (!model.containsAttribute("form")) {
-            model.addAttribute("form", toForm(me, currentUser.user().getBirthday()));
+            model.addAttribute("form", toForm(me));
         }
         model.addAttribute("me", me);
         model.addAttribute("genders", Gender.values());
+        addBackLink(model, me);
         return "app/profile";
     }
 
@@ -47,14 +46,14 @@ public class ProfilePageController {
         UserDto me = UserDto.from(currentUser.user());
         model.addAttribute("me", me);
         model.addAttribute("genders", Gender.values());
+        addBackLink(model, me);
 
         if (bindingResult.hasErrors()) {
-            // форму вернём как есть — Thymeleaf подсветит ошибки валидации
             return "app/profile";
         }
 
         try {
-            UserDto updated = userService.update(currentUser.user(), form);
+            userService.update(currentUser.user(), form);
             flash.addFlashAttribute("successMessage", "Профиль обновлён");
             return "redirect:/app/profile";
         } catch (ConflictException e) {
@@ -64,18 +63,29 @@ public class ProfilePageController {
     }
 
 
-    private UserUpdateRequest toForm(UserDto dto, LocalDate birthday) {
+    private UserUpdateRequest toForm(UserDto dto) {
         return new UserUpdateRequest(
                 nullToEmpty(dto.name()),
                 nullToEmpty(dto.surname()),
                 nullToEmpty(dto.email()),
                 nullToEmpty(dto.phone()),
                 dto.gender(),
-                birthday
+                dto.birthday()
         );
     }
 
     private static String nullToEmpty(String value) {
         return value == null ? "" : value;
+    }
+
+    private static void addBackLink(Model model, UserDto me) {
+        boolean isSpecialist = me.role() != null && me.role().name().equals("SPECIALIST");
+        if (isSpecialist) {
+            model.addAttribute("backUrl", "/specialist");
+            model.addAttribute("backLabel", "← К списку пользователей");
+        } else {
+            model.addAttribute("backUrl", "/app");
+            model.addAttribute("backLabel", "← В кабинет");
+        }
     }
 }

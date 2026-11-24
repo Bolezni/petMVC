@@ -1,20 +1,35 @@
 package com.example.demo.api.dto;
 
 import com.example.demo.store.entities.Gender;
+import com.example.demo.store.entities.Roles;
 import com.example.demo.store.entities.UserEntity;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public record UserDto(
         Long id,
-        String email,
         String name,
         String surname,
+        String email,
         String phone,
         Gender gender,
-        Integer age
+        LocalDate birthday,      // <-- добавили
+        LocalDateTime createdAt,       // <-- добавили
+        Roles role
 
 ) {
-    public static UserDto from(UserEntity entity){
-        return new UserDto(entity.getId(), entity.getEmail(), entity.getName(), entity.getSurname(),
-                entity.getPhone(), entity.getGender(), entity.getAge());
+    public static UserDto from(UserEntity e) {
+        return new UserDto(
+                e.getId(),
+                e.getName(),
+                e.getSurname(),
+                e.getEmail(),
+                e.getPhone(),
+                e.getGender(),
+                e.getBirthday(),
+                e.getCreatedAt(),
+                e.getRole()
+        );
     }
 }

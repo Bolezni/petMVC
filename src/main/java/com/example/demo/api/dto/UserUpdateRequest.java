@@ -1,7 +1,9 @@
 package com.example.demo.api.dto;
 
+import com.example.demo.api.annotation.MaxAge;
 import com.example.demo.store.entities.Gender;
 import jakarta.validation.constraints.*;
+import org.aspectj.lang.annotation.After;
 
 import java.time.LocalDate;
 
@@ -9,7 +11,7 @@ public record UserUpdateRequest(
         @NotBlank
         @Size(max = 100)
         String name,
-        @NotBlank
+        @NotNull
         @Size(max = 100)
         String surname,
         @NotBlank
@@ -19,6 +21,8 @@ public record UserUpdateRequest(
         String phone,
         @NotNull
         Gender gender,
+        @Past(message = "Дата рождения не может быть в будущем")
+        @MaxAge(value = 100, message = "Дата рождения не может быть более 100 лет назад")
         LocalDate birthday
 ) {
 }

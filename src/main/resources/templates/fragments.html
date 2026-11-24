@@ -17,7 +17,7 @@
             <a th:if="${isSpecialist}" th:href="@{/specialist}">Пользователи</a>
             <a th:if="${isSpecialist}" th:href="@{/specialist/exercises}">Упражнения</a>
             <a th:if="${!isSpecialist}" th:href="@{/app}">Кабинет</a>
-            <a th:if="${!isSpecialist}" th:href="@{/app/profile}">Профиль</a>
+            <a  th:href="@{/app/profile}">Профиль</a>
             <form method="post" th:action="@{/logout}">
                 <button class="link-button" type="submit">Выйти</button>
             </form>
