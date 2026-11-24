@@ -26,7 +26,7 @@
     <section class="card">
         <div class="section-title">
             <h2>Мои данные</h2>
-            <span class="badge badge-done" th:text="${me.role.name() == 'SPECIALIST' ? 'Специалист' : 'Клиент'}">Клиент</span>
+            <span class="badge badge-done" th:text="${me.role == 'SPECIALIST' ? 'Специалист' : 'Клиент'}">Клиент</span>
         </div>
 
         <ul class="list">
@@ -44,7 +44,7 @@
             </li>
             <li>
                 <span class="muted">Пол</span>
-                <span th:text="${me.gender != null ? (me.gender.name() == 'MAN' ? 'Мужской' : 'Женский') : '—'}"></span>
+                <span th:text="${me.gender != null ? (me.gender == 'MAN' ? 'Мужской' : 'Женский') : '—'}"></span>
             </li>
             <li>
                 <span class="muted">Дата рождения</span>
