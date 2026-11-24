@@ -26,7 +26,7 @@
     <section class="card">
         <div class="section-title">
             <h2>Мои данные</h2>
-            <span class="badge badge-done" th:text="${me.role == 'SPECIALIST' ? 'Специалист' : 'Клиент'}">Клиент</span>
+            <span class="badge badge-done" th:text="${#strings.equals(#strings.toString(me.role), 'SPECIALIST') ? 'Специалист' : 'Клиент'}">Клиент</span>
         </div>
 
         <ul class="list">
@@ -44,7 +44,7 @@
             </li>
             <li>
                 <span class="muted">Пол</span>
-                <span th:text="${me.gender != null ? (me.gender == 'MAN' ? 'Мужской' : 'Женский') : '—'}"></span>
+                <span th:text="${me.gender != null ? (#strings.equals(#strings.toString(me.gender), 'MAN') ? 'Мужской' : 'Женский') : '—'}"></span>
             </li>
             <li>
                 <span class="muted">Дата рождения</span>
@@ -110,7 +110,7 @@
                     <option value="" disabled selected>Выберите пол</option>
                     <option th:each="g : ${genders}"
                             th:value="${g}"
-                            th:text="${g.name() == 'MAN' ? 'Мужской' : 'Женский'}"></option>
+                            th:text="${#strings.equals(#strings.toString(g), 'MAN') ? 'Мужской' : 'Женский'}"></option>
                 </select>
                 <span class="hint" style="color: #dc2626;"
                       th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></span>
