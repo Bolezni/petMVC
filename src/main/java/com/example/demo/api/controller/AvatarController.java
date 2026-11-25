@@ -35,7 +35,7 @@ public class AvatarController {
         mediaService.removeAvatar();
     }
 
-    @GetMapping("/api/media/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<Resource> get(@PathVariable Long id) {
         MediaContent content = mediaService.getContent(id, false);
         return ResponseEntity.ok()

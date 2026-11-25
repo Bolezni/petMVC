@@ -83,7 +83,7 @@
 
             <!-- Реальная аватарка -->
             <img th:if="${me.avatarId != null}"
-                 th:src="@{/api/media/{id}(id=${me.avatarId})}"
+                 th:src="@{/api/v1/profile/avatar/{id}(id=${me.avatarId})}"
                  alt="Аватар"
                  style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:1px solid #e5e7eb;">
 
