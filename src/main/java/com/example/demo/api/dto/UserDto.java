@@ -14,9 +14,11 @@ public record UserDto(
         String email,
         String phone,
         Gender gender,
-        LocalDate birthday,      // <-- добавили
-        LocalDateTime createdAt,       // <-- добавили
-        Roles role
+        Integer age,
+        LocalDate birthday,
+        LocalDateTime createdAt,
+        Roles role,
+        Long avatarId
 
 ) {
     public static UserDto from(UserEntity e) {
@@ -27,9 +29,11 @@ public record UserDto(
                 e.getEmail(),
                 e.getPhone(),
                 e.getGender(),
+                e.getAge(),
                 e.getBirthday(),
                 e.getCreatedAt(),
-                e.getRole()
+                e.getRole(),
+                e.getAvatar() != null ? e.getAvatar().getId() : null
         );
     }
 }

@@ -55,6 +55,7 @@ app:
   media:
     # время жизни подписанной ссылки на файл
     url-ttl-ms: ${MEDIA_URL_TTL_MS:900000}
+    avatar-max-size: 5MB
   cookies:
     # true на сервере с HTTPS, false локально (по http браузер не пришлёт Secure-cookie)
     secure: ${COOKIE_SECURE:false}

@@ -50,6 +50,10 @@ public class UserEntity extends BaseEntity {
 
     private LocalDate birthday;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "avatar_id")
+    private MediaFileEntity avatar;
+
 
     public Integer getAge() {
         if (birthday != null)

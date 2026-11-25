@@ -54,81 +54,177 @@
                 <span th:text="${me.birthday != null ? #temporals.format(me.birthday, 'dd.MM.yyyy') : '—'}"></span>
             </li>
             <li>
+                <span class="muted">Возраст</span>
+                <span th:text="${me.age != null ? me.age : '—'}"></span>
+            </li>
+            <li>
                 <span class="muted">Зарегистрирован</span>
                 <span th:text="${me.createdAt != null ? #temporals.format(me.createdAt, 'dd.MM.yyyy') : '—'}"></span>
             </li>
         </ul>
     </section>
 
+    <!-- Карточка: аватар -->
+    <section class="card">
+        <div class="section-title">
+            <h2>Аватар</h2>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:16px;">
+
+            <!-- Заглушка, если аватара нет -->
+            <div th:if="${me.avatarId == null}"
+                 th:with="initial=${#strings.isEmpty(me.name) ? '?' : #strings.substring(me.name, 0, 1)}"
+                 style="width:96px;height:96px;border-radius:50%;background:#e5e7eb;
+                        display:flex;align-items:center;justify-content:center;
+                        font-size:32px;color:#6b7280;font-weight:600;">
+                <span th:text="${#strings.toUpperCase(initial)}"></span>
+            </div>
+
+            <!-- Реальная аватарка -->
+            <img th:if="${me.avatarId != null}"
+                 th:src="@{/api/media/{id}(id=${me.avatarId})}"
+                 alt="Аватар"
+                 style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:1px solid #e5e7eb;">
+
+            <div style="display:flex; flex-direction:column; gap:8px;">
+                <form method="post"
+                      th:action="@{/app/profile/avatar}"
+                      enctype="multipart/form-data">
+                    <label class="field">
+                        <span class="field-label">Загрузить новую</span>
+                        <input type="file" name="avatar"
+                               accept="image/jpeg,image/png,image/webp" required>
+                        <span class="hint">JPEG, PNG или WebP, до 5 МБ.</span>
+                    </label>
+                    <button class="btn btn-primary" type="submit">Загрузить</button>
+                </form>
+
+                <form method="post"
+                      th:action="@{/app/profile/avatar/delete}"
+                      th:if="${me.avatarId != null}">
+                    <button class="btn btn-secondary" type="submit">Удалить аватар</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
     <!-- Форма редактирования -->
-    <form method="post" th:action="@{/app/profile}" th:object="${form}" class="form">
+    <details class="card">
+        <summary style="cursor:pointer; font-weight:600;">Основное</summary>
+        <form method="post" th:action="@{/app/profile}" th:object="${form}" class="form">
 
-        <fieldset class="card">
-            <legend>Основное</legend>
+            <fieldset class="card">
 
-            <label class="field">
-                <span class="field-label">Имя</span>
-                <input type="text" th:field="*{name}" required
-                       placeholder="Например: Иван">
+                <label class="field">
+                    <span class="field-label">Имя</span>
+                    <input type="text" th:field="*{name}" required
+                           placeholder="Например: Иван">
+                    <span class="hint" style="color: #dc2626;"
+                          th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+                </label>
+
+                <label class="field">
+                    <span class="field-label">Фамилия</span>
+                    <input type="text" th:field="*{surname}" placeholder="Например: Петров">
+                    <span class="hint" style="color: #dc2626;"
+                          th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}"></span>
+                </label>
+            </fieldset>
+
+            <fieldset class="card">
+                <legend>Контакты</legend>
+
+                <label class="field">
+                    <span class="field-label">Email</span>
+                    <input type="email" th:field="*{email}" required
+                           placeholder="you@example.com">
+                    <span class="hint">Используется для входа. Не должен быть занят другим аккаунтом.</span>
+                    <span class="hint" style="color: #dc2626;"
+                          th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
+                </label>
+
+                <label class="field">
+                    <span class="field-label">Телефон</span>
+                    <input type="tel" th:field="*{phone}" required
+                           placeholder="+7 900 000-00-00">
+                    <span class="hint" style="color: #dc2626;"
+                          th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></span>
+                </label>
+            </fieldset>
+
+            <fieldset class="card">
+                <legend>О себе</legend>
+
+                <label class="field">
+                    <span class="field-label">Пол</span>
+                    <select th:field="*{gender}" required>
+                        <option value="" disabled selected>Выберите пол</option>
+                        <option th:each="g : ${genders}"
+                                th:value="${g}"
+                                th:text="${g.name() == 'MAN' ? 'Мужской' : 'Женский'}"></option>
+                    </select>
+                    <span class="hint" style="color: #dc2626;"
+                          th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></span>
+                </label>
+
+                <label class="field">
+                    <span class="field-label">Дата рождения</span>
+                    <input type="date" th:field="*{birthday}">
+                    <span class="hint">Необязательно, но помогает специалисту подобрать нагрузку.</span>
+                    <span class="hint" style="color: #dc2626;"
+                          th:if="${#fields.hasErrors('birthday')}" th:errors="*{birthday}"></span>
+                </label>
+            </fieldset>
+
+            <button class="btn btn-primary btn-block" type="submit">Сохранить изменения</button>
+        </form>
+    </details>
+
+    <!-- Смена пароля -->
+    <details class="card">
+        <summary style="cursor:pointer; font-weight:600;">Сменить пароль</summary>
+        <form method="post" th:action="@{/app/profile/password}" th:object="${passwordForm}" class="form">
+            <fieldset class="card">
+
+                <label class="field">
+                    <span class="field-label">Текущий пароль</span>
+                    <input type="password" th:field="*{currentPassword}" required
+                           autocomplete="current-password">
+                    <span class="hint" style="color: #dc2626;"
+                          th:if="${#fields.hasErrors('currentPassword')}"
+                          th:errors="*{currentPassword}"></span>
+                </label>
+
+                <label class="field">
+                    <span class="field-label">Новый пароль</span>
+                    <input type="password" th:field="*{newPassword}" required
+                           autocomplete="new-password" minlength="6">
+                    <span class="hint">Минимум 6 символов. Не должен совпадать с текущим.</span>
+                    <span class="hint" style="color: #dc2626;"
+                          th:if="${#fields.hasErrors('newPassword')}"
+                          th:errors="*{newPassword}"></span>
+                </label>
+
+                <label class="field">
+                    <span class="field-label">Повторите новый пароль</span>
+                    <input type="password" th:field="*{repeatNewPassword}" required
+                           autocomplete="new-password" minlength="6">
+                    <span class="hint" style="color: #dc2626;"
+                          th:if="${#fields.hasErrors('repeatNewPassword')}"
+                          th:errors="*{repeatNewPassword}"></span>
+                </label>
+
+                <!-- @AssertTrue на DTO: ошибка привязывается к полю passwordsMatch -->
                 <span class="hint" style="color: #dc2626;"
-                      th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
-            </label>
+                      th:if="${#fields.hasErrors('passwordsMatch')}"
+                      th:errors="*{passwordsMatch}"></span>
 
-            <label class="field">
-                <span class="field-label">Фамилия</span>
-                <input type="text" th:field="*{surname}" placeholder="Например: Петров">
-                <span class="hint" style="color: #dc2626;"
-                      th:if="${#fields.hasErrors('surname')}" th:errors="*{surname}"></span>
-            </label>
-        </fieldset>
+                <button class="btn btn-secondary btn-block" type="submit">Сменить пароль</button>
+            </fieldset>
+        </form>
+    </details>
 
-        <fieldset class="card">
-            <legend>Контакты</legend>
-
-            <label class="field">
-                <span class="field-label">Email</span>
-                <input type="email" th:field="*{email}" required
-                       placeholder="you@example.com">
-                <span class="hint">Используется для входа. Не должен быть занят другим аккаунтом.</span>
-                <span class="hint" style="color: #dc2626;"
-                      th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></span>
-            </label>
-
-            <label class="field">
-                <span class="field-label">Телефон</span>
-                <input type="tel" th:field="*{phone}" required
-                       placeholder="+7 900 000-00-00">
-                <span class="hint" style="color: #dc2626;"
-                      th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></span>
-            </label>
-        </fieldset>
-
-        <fieldset class="card">
-            <legend>О себе</legend>
-
-            <label class="field">
-                <span class="field-label">Пол</span>
-                <select th:field="*{gender}" required>
-                    <option value="" disabled selected>Выберите пол</option>
-                    <option th:each="g : ${genders}"
-                            th:value="${g}"
-                            th:text="${g.name() == 'MAN' ? 'Мужской' : 'Женский'}"></option>
-                </select>
-                <span class="hint" style="color: #dc2626;"
-                      th:if="${#fields.hasErrors('gender')}" th:errors="*{gender}"></span>
-            </label>
-
-            <label class="field">
-                <span class="field-label">Дата рождения</span>
-                <input type="date" th:field="*{birthday}">
-                <span class="hint">Необязательно, но помогает специалисту подобрать нагрузку.</span>
-                <span class="hint" style="color: #dc2626;"
-                      th:if="${#fields.hasErrors('birthday')}" th:errors="*{birthday}"></span>
-            </label>
-        </fieldset>
-
-        <button class="btn btn-primary btn-block" type="submit">Сохранить изменения</button>
-    </form>
 </main>
 
 <footer th:replace="~{fragments :: footer}"></footer>

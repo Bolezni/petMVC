@@ -1,5 +1,6 @@
 package com.example.demo.web;
 
+import com.example.demo.api.dto.PasswordChangeRequest;
 import com.example.demo.api.dto.UserDto;
 import com.example.demo.api.dto.UserUpdateRequest;
 import com.example.demo.api.exception.exeptions.ConflictException;
@@ -8,6 +9,7 @@ import com.example.demo.api.service.user.UserService;
 import com.example.demo.store.entities.Gender;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.apache.coyote.BadRequestException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,13 +30,32 @@ public class ProfilePageController {
     @GetMapping("/profile")
     public String profile(@AuthenticationPrincipal CustomUserDetails currentUser, Model model) {
         UserDto me = UserDto.from(currentUser.user());
-        if (!model.containsAttribute("form")) {
-            model.addAttribute("form", toForm(me));
-        }
-        model.addAttribute("me", me);
-        model.addAttribute("genders", Gender.values());
-        addBackLink(model, me);
+        prepareProfileModel(model, me, null, null);
         return "app/profile";
+    }
+
+    @PostMapping("/profile/password")
+    public String changePassword(@AuthenticationPrincipal CustomUserDetails currentUser,
+                                 @Valid @ModelAttribute("passwordForm") PasswordChangeRequest form,
+                                 BindingResult bindingResult,
+                                 Model model,
+                                 RedirectAttributes flash) {
+
+        UserDto me = UserDto.from(currentUser.user());
+        prepareProfileModel(model, me, null, bindingResult);
+
+        if (bindingResult.hasErrors()) {
+            return "app/profile";
+        }
+
+        try {
+            userService.passwordChange(form);
+            flash.addFlashAttribute("successMessage", "Пароль обновлён. Войдите заново.");
+            return "redirect:/login";
+        } catch (BadRequestException e) {
+            model.addAttribute("errorMessage", e.getMessage());
+            return "app/profile";
+        }
     }
 
     @PostMapping("/profile")
@@ -44,9 +65,7 @@ public class ProfilePageController {
                          Model model,
                          RedirectAttributes flash) {
         UserDto me = UserDto.from(currentUser.user());
-        model.addAttribute("me", me);
-        model.addAttribute("genders", Gender.values());
-        addBackLink(model, me);
+        prepareProfileModel(model, me, bindingResult, null);
 
         if (bindingResult.hasErrors()) {
             return "app/profile";
@@ -62,6 +81,21 @@ public class ProfilePageController {
         }
     }
 
+    private void prepareProfileModel(Model model,
+                                     UserDto me,
+                                     BindingResult profileErrors,
+                                     BindingResult passwordErrors) {
+        model.addAttribute("me", me);
+        model.addAttribute("genders", Gender.values());
+        addBackLink(model, me);
+
+        if (!model.containsAttribute("form") && !model.containsAttribute("profileForm")) {
+            model.addAttribute("form", toForm(me));
+        }
+        if (!model.containsAttribute("passwordForm")) {
+            model.addAttribute("passwordForm", new PasswordChangeRequest(null, null, null));
+        }
+    }
 
     private UserUpdateRequest toForm(UserDto dto) {
         return new UserUpdateRequest(

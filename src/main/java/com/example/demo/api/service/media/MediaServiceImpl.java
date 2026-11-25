@@ -11,8 +11,10 @@ import com.example.demo.store.entities.UserEntity;
 import com.example.demo.store.repo.ExerciseRepository;
 import com.example.demo.store.repo.MediaFileRepository;
 
+import com.example.demo.store.repo.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.core.io.Resource;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -42,6 +44,7 @@ public class MediaServiceImpl implements MediaService {
     private final MediaFileRepository repository;
     private final ExerciseRepository exerciseRepository;
     private final FileStorage storage;
+    private final UserRepository userRepository;
 
     @Transactional
     @Override
@@ -73,7 +76,6 @@ public class MediaServiceImpl implements MediaService {
             throw new RuntimeException("Не удалось прочитать файл");
         }
 
-        // имя на диске генерируем сами, имя от клиента в путь не попадает
         String key = user.getId() + "/" + UUID.randomUUID() + "." + ext;
 
         try (InputStream in = file.getInputStream()) {
@@ -125,7 +127,7 @@ public class MediaServiceImpl implements MediaService {
         UserEntity current = CheckAuthUtil.getAuthUser();
         boolean owner = media.getUser().getId().equals(current.getId());
         boolean specialist = current.getRole() == Roles.SPECIALIST;
-        // видео-демонстрация упражнения — часть контента, её видят все авторизованные
+
         boolean exerciseVideo = exerciseRepository.existsByVideoMediaIdAndActiveTrue(media.getId());
 
         return owner || specialist || exerciseVideo;
@@ -149,6 +151,98 @@ public class MediaServiceImpl implements MediaService {
 
         // файл удаляем best-effort: осиротевший файл безвреден, битая запись — нет
         storage.delete(media.getStorageKey());
+    }
+
+    // MediaServiceImpl.java
+    private static final long MAX_AVATAR = 5L * 1024 * 1024;
+
+    @Transactional
+    @Override
+    public MediaResponseDto setAvatar(MultipartFile file) throws BadRequestException {
+        UserEntity user = CheckAuthUtil.getAuthUser();
+
+        if (file.isEmpty()) {
+            throw new BadRequestException("Файл пустой");
+        }
+        String contentType = file.getContentType();
+        if (contentType == null || !PHOTO_TYPES.containsKey(contentType)) {
+            throw new BadRequestException("Аватар должен быть изображением (JPEG, PNG, WebP)");
+        }
+        if (file.getSize() > MAX_AVATAR) {
+            throw new BadRequestException("Аватар не должен превышать 5 МБ");
+        }
+
+        String ext = PHOTO_TYPES.get(contentType);
+        try {
+            if (!matchesSignature(file, ext)) {
+                throw new BadRequestException("Содержимое файла не соответствует изображению");
+            }
+        } catch (IOException e) {
+            throw new BadRequestException("Не удалось прочитать файл");
+        }
+
+        // запоминаем старый аватар, чтобы удалить после успешной замены
+        MediaFileEntity old = user.getAvatar();
+
+        String key = user.getId() + "/avatar-" + UUID.randomUUID() + "." + ext;
+        try (InputStream in = file.getInputStream()) {
+            storage.save(key, in);
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось сохранить файл", e);
+        }
+
+        try {
+            MediaFileEntity entity = new MediaFileEntity();
+            entity.setUser(user);
+            entity.setType(TypeMedia.PHOTO);
+            entity.setStorageKey(key);
+            entity.setOriginalName(file.getOriginalFilename());
+            entity.setContentType(contentType);
+            entity.setSizeBytes(file.getSize());
+
+            MediaFileEntity saved = repository.saveAndFlush(entity);
+
+            user.setAvatar(saved);
+            userRepository.saveAndFlush(user);
+
+            // удаляем старый файл best-effort, после того как новый уже привязан
+            if (old != null && !old.getId().equals(saved.getId())) {
+                try {
+                    repository.delete(old);
+                    repository.flush();
+                    storage.delete(old.getStorageKey());
+                } catch (RuntimeException e) {
+                    log.warn("Не удалось удалить старый аватар id={}: {}", old.getId(), e.getMessage());
+                }
+            }
+
+            return toDto(saved);
+        } catch (RuntimeException e) {
+            // БД упала — откатываем файл, чтобы не было сироты
+            storage.delete(key);
+            throw e;
+        }
+    }
+
+    @Transactional
+    @Override
+    public void removeAvatar() {
+        UserEntity user = CheckAuthUtil.getAuthUser();
+        MediaFileEntity avatar = user.getAvatar();
+        if (avatar == null) {
+            return;   // идемпотентно: нечего удалять
+        }
+
+        user.setAvatar(null);
+        userRepository.saveAndFlush(user);
+
+        try {
+            repository.delete(avatar);
+            repository.flush();
+            storage.delete(avatar.getStorageKey());
+        } catch (RuntimeException e) {
+            log.warn("Не удалось удалить файл аватара id={}: {}", avatar.getId(), e.getMessage());
+        }
     }
 
     // клиентский Content-Type легко подделать, проверяем первые байты
